@@ -45,15 +45,15 @@ mutable struct F16LinearLateral <: FlightDynamicalSystems
         u = [u_a, u_r]  (aileron and rudder servo inputs, [deg])
     """
     system::FymSystem
+    dyn
     A
     B
     C
-    dyn
     F16LinearLateral(; kwargs...) = init!(new(); kwargs...)
 end
 
 function init!(fds::F16LinearLateral;
-               initial_state=[1, 0, 0, 0, 0, 0, 0])
+               initial_state=[1.0, 0, 0, 0, 0, 0, 0])
     fds.system = BaseSystem(initial_state=initial_state)
     fds.A = [
              [-0.322 0.064 0.0364 -0.9917 0.0003 0.0008 0];

@@ -363,7 +363,6 @@ function ProgressMeter.update!(env::FymEnv; kwargs...)
                          )
     done = false
     # TODO: low priority; add eager stop; should we?
-    # tfinal, yfinal = t_hist[end], ode_hist[end]
     tfinal, yfinal = t_hist[end], ode_hist[end]
     # Update the systems' state
     for system in _systems(env)
@@ -421,6 +420,7 @@ end
 function rk4(func, y0, t, kwargs)
     n = length(t)
     y = [zero(y0) for i in 1:n]
+    y[1] = y0
     for i in 1:n-1
         h = t[i+1] - t[i]
         k1 = func(y[i], kwargs, t[i])

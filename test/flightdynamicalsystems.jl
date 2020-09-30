@@ -26,10 +26,11 @@ function test_f16linearlateral()
     log_dir = "data"
     file_name = "test.h5"
     logger = Logger(log_dir=log_dir, file_name=file_name)
-    env = BaseEnv(logger=logger)
+    env = BaseEnv(logger=logger, max_t=0.10)
     systems!(env, systems)
     dyn!(env, set_dyn)
     reset!(env)
+    obs = observe_flat(env)
     i = 0
     @time while true
         next_obs, reward, done, info = step!(env)
