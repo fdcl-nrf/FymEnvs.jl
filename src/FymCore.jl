@@ -106,7 +106,8 @@ end
 
 function _show(sys::FymSystem; i=0)
     result = []
-    for symbol in [:name, :state, :dot, :initial_state, :state_size, :flat_index]
+    for symbol in [:name, :state, :dot, :initial_state,
+                   :state_size, :flat_index]
         if isdefined(sys, symbol)
             value = getproperty(sys, symbol)
         else
@@ -127,7 +128,7 @@ function Base.show(io::IO, sys::FymSystem)
     println(io, res)
 end
 
-function init!(sys::FymSystem;
+function init!(sys::BaseSystem;
                     initial_state=nothing, state_size=(1, 1), name=nothing)
     if initial_state == nothing
         initial_state = zeros(state_size)

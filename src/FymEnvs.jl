@@ -21,9 +21,11 @@ function record end
 
 include("FymCore.jl")
 include("FymLogging.jl")
+include("FymModels.jl")
 
 @reexport using .FymCore
 @reexport using .FymLogging
+@reexport using .FymModels
 
 
 end
