@@ -22,10 +22,10 @@ mutable struct Logger
     info
     buffer
     len
-    Logger(args...; kwargs...) = initialise(new(), args...; kwargs...)  # lazy init
+    Logger(args...; kwargs...) = init!(new(), args...; kwargs...)  # lazy init
 end
 
-function initialise(logger::Logger;
+function init!(logger::Logger;
                     path=nothing, log_dir=nothing, file_name="data.h5",
                     max_len=10, mode="w")
     if path == nothing

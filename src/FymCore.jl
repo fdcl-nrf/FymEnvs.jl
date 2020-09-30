@@ -8,7 +8,7 @@ Note: numerical integration using package `DynamicalSystems` will be deprecated.
 module FymCore
 
 
-import FymEnvs: close!
+import FymEnvs: close!, dyn
 
 include("FymLogging.jl")
 using .FymLogging
@@ -251,11 +251,12 @@ function indexing!(env::FymEnv)
         system.flat_index = (start+1):(start + system.state_length)
         start += system.state_length
     end
-    env.state_size = (sum([system.state_length for system in _systems(env)]),)
-end
-
-function Base.sum(a::Array{Any, 1})
-    return 0  # sum([]) = 0
+    tmp = [system.state_length for system in _systems(env)]
+    if length(tmp) == 0
+        env.state_size = (0,)
+    else
+        env.state_size = (sum(tmp),)
+    end
 end
 
 function reset!(env::FymEnv)

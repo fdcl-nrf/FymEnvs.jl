@@ -15,9 +15,10 @@ module FymEnvs
 
 using Reexport
 
-# to avoid conflict; same name functions in FymCore and FymLogging
+# to avoid conflict; same name functions in different modules
 function close! end
 function record end
+function dyn end
 
 include("FymCore.jl")
 include("FymLogging.jl")
