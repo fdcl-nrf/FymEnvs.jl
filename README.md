@@ -85,7 +85,7 @@ size((data["state"])["sys"]) = (10000, 3)
 ```
 
 For more examples such as simulation with custom environments,
-see a directory `test`.
+see directory `test`.
 
 ## Notice
 ### **FymEnvs.jl** does not directly support `Gym`'s features.
