@@ -30,7 +30,7 @@ export Clock
 
 export update!, close!, reset!, render
 export observe_array, observe_dict, observe_flat
-export systems!, systems, dyn!, dyn, state, dot, dot!
+export systems!, dyn!
 export time_over, time
 
 

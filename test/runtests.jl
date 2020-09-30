@@ -21,16 +21,16 @@ function test_Fym()
         # corresponding to `set_dot` of the original fym
         # you can use any names in this package
         sys = env.systems["sys"]
-        x = state(sys)
+        x = sys.state
         A = Matrix(I, 3, 3)
         sys.dot = -A * x
     end
     function step!(env)
         t = time(env.clock)
         sys = env.systems["sys"]
-        x = state(sys)
+        x = sys.state
         update!(env)
-        next_obs = state(sys)
+        next_obs = sys.state
         reward = zeros(1)
         done = time_over(env.clock)
         info = Dict(
@@ -53,7 +53,7 @@ function test_Fym()
     obs = observe_flat(env)
     i = 0
     @time while true
-        render(env)  # progress bar; not mendatory
+        render(env)  # not mendatory; would make simulator slow
         next_obs, reward, done, info = step!(env)
         obs = next_obs
         i += 1

@@ -19,16 +19,16 @@ function set_dyn(env, t)
     # corresponding to `set_dot` of the original fym
     # you can use any names in this package
     sys = env.systems["sys"]
-    x = state(sys)
+    x = sys.state
     A = Matrix(I, 3, 3)
     sys.dot = -A * x
 end
 function step!(env)
     t = time(env.clock)
     sys = env.systems["sys"]
-    x = state(sys)
+    x = sys.state
     update!(env)
-    next_obs = state(sys)
+    next_obs = sys.state
     reward = zeros(1)
     done = time_over(env.clock)
     info = Dict(
@@ -51,7 +51,7 @@ reset!(env)  # reset env; required before propagation
 obs = observe_flat(env)
 i = 0
 @time while true
-    render(env)  # progress bar; not mendatory
+    render(env)  # not mendatory; would make simulator slow
     next_obs, reward, done, info = step!(env)
     obs = next_obs
     i += 1
@@ -69,19 +69,19 @@ Result:
 
 ```julia
 # time and progressbar
-100%|█████████████████████████████████████████████████| Time: 0:00:00
-  0.088695 seconds (438.86 k allocations: 26.023 MiB)
+100%|████████████████████████████████████████████████▉|  ETA: 0:00:00
+0.818459 seconds (3.94 M allocations: 224.892 MiB, 3.24% gc time)
 # representation, i.e., show (nested env supported)
-env = 
 name: test_env
 +---name: 3d_sys
-|   state: [0.0, 0.0, 0.0]
-|   dot: [0.0, 0.0, 0.0]
+|   state: [3.7200760072278747e-44, 7.440152014455749e-44, 1.1160228021683672e-43]
+|   dot: [-3.7200756925403154e-44, -7.440151385080631e-44, -1.1160227077620995e-43]
 |   initial_state: [1.0, 2.0, 3.0]
 |   state_size: (3,)
 |   flat_index: 1:3
+env =
 # saved data
-size((data["state"])["sys"]) = (100, 3)
+size((data["state"])["sys"]) = (10000, 3)
 ```
 
 For more examples such as simulation with custom environments,

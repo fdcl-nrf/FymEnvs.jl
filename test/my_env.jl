@@ -23,12 +23,12 @@ params(env) = env.params
 control(env, x) = params(env)["controller"](x)
 
 function set_dyn(env, t)  # corresponding to set_dot of the original FymEnvs
-    my_sys = systems(env)["my_sys"]
-    x = state(my_sys)
+    my_sys = env.systems["my_sys"]
+    x = my_sys.state
     u = control(env, x)
     A = Matrix(I, 3, 3)
     B = Matrix(I, 3, 3)
-    dot!(my_sys, A*x + B*u)
+    my_sys.dot = A*x + B*u
 end
 
 function FymEnvs.reset!(env)
@@ -40,13 +40,13 @@ observe(env) = observe_array(env)
 
 function step!(env)
     t = time(env.clock)
-    my_sys = systems(env)["my_sys"]
-    x = state(my_sys)
+    my_sys = env.systems["my_sys"]
+    x = my_sys.state
     u = control(env, x)
     info = Dict("time" => t, "state" => x, "input" => u)
 
     update!(env)
-    next_obs = state(my_sys)
+    next_obs = my_sys.state
     reward = zeros(1)
     done = time_over(env.clock)
     return next_obs, reward, done, info

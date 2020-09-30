@@ -7,9 +7,9 @@ function test_f16linearlateral()
     function step!(env)
         t = time(env.clock)
         sys = env.systems["f16"]
-        x = state(sys)
+        x = sys.state
         update!(env)
-        next_obs = state(sys)
+        next_obs = sys.state
         reward = zeros(1)
         done = time_over(env.clock)
         info = Dict()
@@ -18,7 +18,7 @@ function test_f16linearlateral()
     f16 = F16LinearLateral()
     function set_dyn(env, t; deriv=dyn(f16))
         sys = env.systems["f16"]
-        x = state(sys)
+        x = sys.state
         u = zeros(2)
         sys.dot = deriv(x, u)
     end
