@@ -5,19 +5,9 @@ version = "0.1.0"
 
 [deps]
 Registrator = "4418983a-e44d-11e8-3aec-9789530b3b3e"
-Reexport
-ProgressMeter
-StaticArrays
-HDF5
-Dates
-LinearAlgebra
 
 [compat]
 julia = "1.5"
-Reexport = "0.2"
-ProgressMeter = "1.4"
-StaticArrays = "0.12"
-HDF5 = "0.13"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
