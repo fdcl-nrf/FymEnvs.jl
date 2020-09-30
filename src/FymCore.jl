@@ -7,11 +7,13 @@ Note: numerical integration using package `DynamicalSystems` will be deprecated.
 """
 module FymCore
 
+using Reexport
+
 
 import FymEnvs: close!, dyn
 
 include("FymLogging.jl")
-using .FymLogging
+@reexport using .FymLogging
 
 using ProgressMeter
 using Debugger  # TODO: delete it
@@ -28,7 +30,7 @@ export Clock
 
 export update!, close!, reset!, render
 export observe_array, observe_dict, observe_flat
-export systems, systems!, dyn, dyn!, state, state!, dot, dot!
+export systems!, dyn!, state, dot
 export time_over, time
 
 
@@ -165,7 +167,8 @@ end
 abstract type FymEnv end
 mutable struct BaseEnv <: FymEnv
     name
-    systems::Dict{Any, Union{FymEnv, FymSystem}}
+    # systems::Dict{Any, Union{FymEnv, FymSystem}}
+    systems::Dict
     dt::Float64
     clock::Clock
     progressbar
