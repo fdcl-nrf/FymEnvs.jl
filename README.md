@@ -90,6 +90,11 @@ see directory `test`.
 ## Notice
 ### **FymEnvs.jl** does not directly support `Gym`'s features.
 - Note that this does not inherit `Gym`'s features, while `fym` *does*.
+### Supported features
+The following features are supported in **FymEnvs.jl**:
+- Nested environments
+    - An environment can contain other environments as its systems.
+
 ### Not supported features
 There are some features of `fym`, not realised yet. Here's the list:
 - eager stop
