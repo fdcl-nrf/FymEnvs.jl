@@ -45,7 +45,7 @@ function test_Fym()
     log_dir = "data"
     file_name = "test.h5"
     logger = Logger(log_dir=log_dir, file_name=file_name)
-    env = BaseEnv(max_t=1.00, logger=logger, name="test_env")
+    env = BaseEnv(max_t=100.00, logger=logger, name="test_env")
     systems!(env, systems)  # set systems; required
     dyn!(env, set_dyn)  # set dynamics; required
 

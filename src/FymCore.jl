@@ -348,7 +348,7 @@ function observe_flat(env::FymEnv)
     return vcat([state(system)[:] for system in _systems(env)]...)  # flatten
 end
 
-function update!(env::FymEnv; kwargs...)
+function ProgressMeter.update!(env::FymEnv; kwargs...)
     t_hist = thist(env.clock)
     ode_hist = env.solver(
                           env.ode_func,
@@ -396,7 +396,7 @@ function close!(env::FymEnv)
     end
 end
 
-function render(env::FymEnv; mode="ProgressMeter", desc="", dt=0.1, kwargs...)
+function render(env::FymEnv; mode="ProgressMeter", desc="", dt=0.01, kwargs...)
     if mode == "ProgressMeter"
         if env.progressbar == nothing || time(env.clock) == 0
             env.progressbar = Progress(env.clock.max_len, dt, desc, kwargs...)

@@ -43,7 +43,7 @@ systems = Dict("sys" => BaseSystem(initial_state=x0, name="3d_sys"))
 log_dir = "data"
 file_name = "test.h5"
 logger = Logger(log_dir=log_dir, file_name=file_name)
-env = BaseEnv(max_t=1.00, logger=logger, name="test_env")
+env = BaseEnv(max_t=100.00, logger=logger, name="test_env")
 systems!(env, systems)  # set systems; required
 dyn!(env, set_dyn)  # set dynamics; required
 
@@ -68,8 +68,9 @@ data = load(env.logger.path)
 Result:
 
 ```julia
-# time
-0.021680 seconds (111.55 k allocations: 6.544 MiB)
+# time and progressbar
+100%|█████████████████████████████████████████████████| Time: 0:00:00
+  0.088695 seconds (438.86 k allocations: 26.023 MiB)
 # representation, i.e., show (nested env supported)
 env = 
 name: test_env
