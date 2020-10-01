@@ -180,5 +180,5 @@ function test_custom_env()
 end
 
 test_Fym()
-test_largescale_env()
+# test_largescale_env()
 test_custom_env()
