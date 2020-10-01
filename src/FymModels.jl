@@ -50,11 +50,6 @@ export F16LinearLateral, GlidingVehicle3DOF
 ############ FlightDynamicalSystems ############
 abstract type FlightDynamicalSystems end
 
-function system(fds::FlightDynamicalSystems)
-    initial_state = fds.initial_state
-    return BaseSystem(initial_state=initial_state)
-end
-
 
 @with_kw mutable struct GlidingVehicle3DOF <: FlightDynamicalSystems
     """
@@ -102,6 +97,12 @@ function deriv(gv3::GlidingVehicle3DOF)
     return deriv
 end
 
+function system(gv3::GlidingVehicle3DOF)
+    initial_state = gv3.initial_state
+    name = gv3.name
+    return BaseSystem(initial_state=initial_state, name=name)
+end
+
 
 @with_kw mutable struct F16LinearLateral <: FlightDynamicalSystems
     """
@@ -140,6 +141,8 @@ end
          [57.2958 0 0 0 0 0 0];
          [0 57.2958 0 0 0 0 0]
         ]
+    name = "f16"
+
     initial_state = [1.0, 0, 0, 0, 0, 0, 0]
 end
 
@@ -149,6 +152,13 @@ function deriv(f16::F16LinearLateral)
     end
     return deriv
 end
+
+function system(f16::GlidingVehicle3DOF)
+    initial_state = f16.initial_state
+    name = f16.name
+    return BaseSystem(initial_state=initial_state, name=name)
+end
+
 
 
 end

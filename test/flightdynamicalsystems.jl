@@ -6,7 +6,7 @@ ENV["GKSwstype"]="nul"  # do not show plot
 function test_f16linearlateral()
     f16 = F16LinearLateral()
 
-    function step(env)
+    function step!(env)
         t = time(env.clock)
         sys = env.systems["f16"]
         x = sys.state
@@ -29,7 +29,6 @@ function test_f16linearlateral()
     env = BaseEnv()
     systems!(env, systems)
     dyn!(env, set_dyn)
-    step!(env, step)
     reset!(env)
 
     log_dir = "data/test"
@@ -47,7 +46,7 @@ end
 function test_glidingvehicle3dof()
     gv3 = GlidingVehicle3DOF()
 
-    function step(env)
+    function step!(env)
         t = time(env.clock)
         sys = env.systems["gv3"]
         state = sys.state
@@ -70,7 +69,6 @@ function test_glidingvehicle3dof()
     env = BaseEnv()
     systems!(env, systems)
     dyn!(env, set_dyn)
-    step!(env, step)
     reset!(env)
 
     log_dir = "data/test"
@@ -92,7 +90,7 @@ function _sample(env, agent, log_dir, file_name)
     @time while true
         if agent == nothing
         end
-        next_obs, reward, done, info = env.step()
+        next_obs, reward, done, info = step!(env)
         record(logger, info)
         obs = next_obs
         i += 1

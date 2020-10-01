@@ -31,7 +31,7 @@ export Clock
 
 export update!, close!, reset!, render
 export observe_array, observe_dict, observe_flat
-export systems!, dyn!, step!
+export systems!, dyn!
 export time_over, time
 
 
@@ -171,7 +171,6 @@ mutable struct BaseEnv <: FymEnv
     # systems::Dict{Any, Union{FymEnv, FymSystem}}
     systems::Dict
     dyn
-    step
 
     dt::Float64
     clock::Clock
@@ -185,6 +184,8 @@ mutable struct BaseEnv <: FymEnv
     flat_index::AbstractRange
     state_length::Int
     state_size::Tuple
+
+    params::Dict
 
     BaseEnv(args...; kwargs...) = init!(new(), args...; kwargs...)
 end
@@ -212,12 +213,16 @@ function Base.show(io::IO, env::FymEnv)
     println(res)
 end
 
-function init!(env::FymEnv; systems=Dict(), dyn=nothing, step=nothing,
-                    dt=0.01, max_t=1.0, ode_step_len=1, logger=nothing,
-                    ode_option=Dict(), name=nothing,
-                    solver="rk4")
+function init!(env::FymEnv;
+               systems=Dict(), dyn=nothing, params=Dict(),
+               dt=0.01, max_t=1.0, ode_step_len=1,
+               logger=nothing, ode_option=Dict(), solver="rk4",
+               name=nothing,
+              )
     env.name = name
     systems!(env, systems)
+    env.params = params
+
     env.clock = Clock(dt, ode_step_len, max_t=max_t)
     env.dt = env.clock.dt
 
@@ -229,7 +234,6 @@ function init!(env::FymEnv; systems=Dict(), dyn=nothing, step=nothing,
     #     env.solver = cds
     end
     dyn!(env, dyn)
-    step!(env, step)
     env.ode_func = ode_wrapper(env)
     env.ode_option = ode_option
     env.progressbar = nothing
@@ -290,11 +294,6 @@ end
 
 function dyn!(env::FymEnv, dyn)
     env.dyn = dyn
-end
-
-function step!(env::FymEnv, step)
-    _step(args...; kwargs...) = step(env, args...; kwargs...)
-    env.step = _step
 end
 
 function dyn(env::FymEnv)
