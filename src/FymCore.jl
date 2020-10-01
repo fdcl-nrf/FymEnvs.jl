@@ -8,6 +8,7 @@ Note: numerical integration using package `DynamicalSystems` will be deprecated.
 module FymCore
 
 using Reexport
+using Revise
 
 
 import FymEnvs: close!, dyn
@@ -55,7 +56,6 @@ function init!(clock::Clock, dt, ode_step_len; max_t=10.0)
 end
 
 function reset!(clock::Clock)
-    error("test")
     clock.t = 0.0
     return clock
 end

@@ -16,13 +16,13 @@ function test_f16linearlateral()
         return next_obs, reward, done, info
     end
     f16 = F16LinearLateral()
-    function set_dyn(env, t; deriv=dyn(f16))
+    function set_dyn(env, t; deriv=f16.dyn)
         sys = env.systems["f16"]
         x = sys.state
         u = zeros(2)
         sys.dot = deriv(x, u)
     end
-    systems = Dict("f16" => system(f16))
+    systems = Dict("f16" => f16.system)
     log_dir = "data"
     file_name = "test.h5"
     logger = Logger(log_dir=log_dir, file_name=file_name)
