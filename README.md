@@ -50,7 +50,7 @@ logger = Logger(log_dir=log_dir, file_name=file_name)
 env = BaseEnv(max_t=100.00, logger=logger, name="test_env")
 systems!(env, systems)  # set systems; required
 dyn!(env, set_dyn)  # set dynamics; required
-step!(env, step)  # set dynamics; required
+step!(env, step)  # set step; required
 
 reset!(env)  # reset env; required before propagation
 obs = observe_flat(env)
