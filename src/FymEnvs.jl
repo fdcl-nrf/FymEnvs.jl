@@ -29,5 +29,8 @@ include("FymModels.jl")
 # @reexport using .FymLogging
 @reexport using .FymModels
 
+abstract type FymEnv end
+export FymEnv
+
 
 end

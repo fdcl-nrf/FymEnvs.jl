@@ -20,9 +20,7 @@ using ProgressMeter
 
 using StaticArrays
 
-# export FymEnv
 export BaseEnv
-# export FymSystem
 export BaseSystem
 export Clock
 
@@ -182,7 +180,7 @@ mutable struct BaseEnv
     state_length::Int
     state_size::Tuple
 
-    params::Dict
+    # params::Dict
 
     BaseEnv(args...; kwargs...) = init!(new(), args...; kwargs...)
 end
@@ -211,7 +209,8 @@ function Base.show(io::IO, env::BaseEnv)
 end
 
 function init!(env::BaseEnv;
-               systems=Dict(), dyn=nothing, step=nothing, params=Dict(),
+               systems=Dict(), dyn=nothing, step=nothing,
+               # params=Dict(),
                dt=0.01, max_t=1.0, ode_step_len=1,
                logger=nothing, ode_option=Dict(), solver="rk4",
                name=nothing,
@@ -234,7 +233,7 @@ function init!(env::BaseEnv;
     env.ode_func = ode_wrapper(env)
     env.ode_option = ode_option
     env.progressbar = nothing
-    env.params = params
+    # env.params = params
     return env
 end
 

@@ -164,6 +164,21 @@ function test_custom_env()
     end
 end
 
+function test_custom_fym()
+    fym = TestEnv()
+
+    env = fym.env
+    log_dir = "data/test"
+    file_name = "custom.h5"
+    reset!(env)
+    _sample(env, nothing, log_dir, file_name)
+    data = load(joinpath(log_dir, file_name))
+    for name in ["state", "input"]
+        p = plot(data["time"], data[name])
+        savefig(p, joinpath(log_dir, "custom_"*name*".pdf"))
+    end
+end
+
 function _sample(env, agent, log_dir, file_name)
     logger = Logger(log_dir=log_dir, file_name=file_name, max_len=1000)
     obs = observe_flat(env)
@@ -184,6 +199,14 @@ function _sample(env, agent, log_dir, file_name)
     close!(logger)
 end
 
-test_Fym()
-test_largescale_env()
-test_custom_env()
+function test_all()
+    test_Fym()
+    test_largescale_env()
+    test_custom_fym()
+end
+
+function test_deprecated()
+    test_custom_env()
+end
+
+test_all()

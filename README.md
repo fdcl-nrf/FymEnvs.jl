@@ -7,9 +7,13 @@ This package is also highly inspired by [`Gym`](https://gym.openai.com/), OpenAI
 
 ## Usage
 The usage of **FymEnvs.jl** is very similar to `fym`,
-but there is a significant difference: *does not work with class inheritance* in `Python`.
+but there is a significant difference: *does not inherit BaseEnv* like class in `Python`.
+It may be awkward to the users of the original `fym`.
+To make your own `FymEnv`,
+it is *highly recommended* to see
+the contents about custom environments in directory `test`.
 
-Here is a brief example of the use of **FymEnvs.jl**:
+Here is the simplest example of **FymEnvs.jl**:
 
 ```julia
 using FymEnvs
@@ -23,7 +27,7 @@ function set_dyn(env, t)
     A = Matrix(I, 3, 3)
     sys.dot = -A * x
 end
-function step!(env)
+function step(env)
     t = time(env.clock)
     sys = env.systems["sys"]
     x = sys.state
@@ -40,19 +44,20 @@ end
 
 x0 = collect(1:3)
 systems = Dict("sys" => BaseSystem(initial_state=x0, name="3d_sys"))
-log_dir = "data"
-file_name = "test.h5"
+log_dir = "data/test"
+file_name = "fym.h5"
 logger = Logger(log_dir=log_dir, file_name=file_name)
 env = BaseEnv(max_t=100.00, logger=logger, name="test_env")
 systems!(env, systems)  # set systems; required
 dyn!(env, set_dyn)  # set dynamics; required
+step!(env, step)  # set dynamics; required
 
 reset!(env)  # reset env; required before propagation
 obs = observe_flat(env)
 i = 0
 @time while true
     render(env)  # not mendatory; would make simulator slow
-    next_obs, reward, done, info = step!(env)
+    next_obs, reward, done, info = env.step()
     obs = next_obs
     i += 1
     if done
@@ -69,8 +74,8 @@ Result:
 
 ```julia
 # time and progressbar
-100%|████████████████████████████████████████████████▉|  ETA: 0:00:00
-0.818459 seconds (3.94 M allocations: 224.892 MiB, 3.24% gc time)
+99%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▌ |  ETA: 0:00:00
+0.744015 seconds (3.85 M allocations: 225.629 MiB, 3.30% gc time)
 # representation, i.e., show (nested env supported)
 name: test_env
 +---name: 3d_sys
