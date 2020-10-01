@@ -5,7 +5,7 @@ using Plots
 ENV["GKSwstype"]="nul"  # do not show plot
 using Debugger
 
-includet("custom_env.jl")  # to avoid conflict
+using Revise; includet("custom_env.jl")  # to avoid conflict
 using .TestEnvs
 
 

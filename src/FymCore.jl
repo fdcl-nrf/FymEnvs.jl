@@ -20,8 +20,10 @@ using ProgressMeter
 
 using StaticArrays
 
-export FymEnv, BaseEnv
-export FymSystem, BaseSystem
+# export FymEnv
+export BaseEnv
+# export FymSystem
+export BaseSystem
 export Clock
 
 export update!, close!, reset!, render
@@ -90,9 +92,8 @@ function thist(clock::Clock)
     end
 end
 
-############ FymSystem ############
-abstract type FymSystem end
-mutable struct BaseSystem <: FymSystem
+############ BaseSystem ############
+mutable struct BaseSystem
     initial_state::Array
     state::Array
     state_size::Tuple
@@ -103,7 +104,7 @@ mutable struct BaseSystem <: FymSystem
     BaseSystem(; kwargs...) = init!(new(); kwargs...)
 end
 
-function _show(sys::FymSystem; i=0)
+function _show(sys::BaseSystem; i=0)
     result = []
     for symbol in [:name, :state, :dot, :initial_state,
                    :state_size, :flat_index]
@@ -123,7 +124,7 @@ function _show(sys::FymSystem; i=0)
     return join(result, "\n")
 end
 
-function Base.show(io::IO, sys::FymSystem)
+function Base.show(io::IO, sys::BaseSystem)
     res = _show(sys)
     println(io, res)
 end
@@ -139,33 +140,32 @@ function init!(sys::BaseSystem; initial_state=nothing,
     return sys
 end
 
-function reset!(sys::FymSystem)
+function reset!(sys::BaseSystem)
     state!(sys, sys.initial_state)
     return sys.state
 end
 
-function state(sys::FymSystem)
+function state(sys::BaseSystem)
     return sys.state
 end
 
-function state!(sys::FymSystem, state)
+function state!(sys::BaseSystem, state)
     sys.state = state
 end
 
-function dot(sys::FymSystem)
+function dot(sys::BaseSystem)
     return sys.dot
 end
 
-function dot!(sys::FymSystem, dot)
+function dot!(sys::BaseSystem, dot)
     sys.dot = dot
 end
 
 
-############ FymEnv ############
-abstract type FymEnv end
-mutable struct BaseEnv <: FymEnv
+############ BaseEnv ############
+mutable struct BaseEnv
     name
-    systems::Dict{Any, Union{FymEnv, FymSystem}}
+    systems::Dict{Any, Union{BaseEnv, BaseSystem}}
     dyn
     step
 
@@ -191,13 +191,13 @@ function _add_space(string, i; space=" "^4)
     return space^i * string
 end
 
-function _show(env::FymEnv; i=0)
+function _show(env::BaseEnv; i=0)
     result = []
     push!(result, _add_space("name: $(env.name)", i, space="+---"))
     for system in _systems(env)
-        if typeof(system) <: FymSystem
+        if typeof(system) == BaseSystem
             v_str = _show(system, i=i+1)
-        elseif typeof(system) <: FymEnv
+        elseif typeof(system) == BaseEnv
             v_str = _show(system, i=i+1)
         end
         push!(result, v_str)
@@ -205,12 +205,12 @@ function _show(env::FymEnv; i=0)
     res = join(result, "\n")
 end
 
-function Base.show(io::IO, env::FymEnv)
+function Base.show(io::IO, env::BaseEnv)
     res = _show(env)
     println(res)
 end
 
-function init!(env::FymEnv;
+function init!(env::BaseEnv;
                systems=Dict(), dyn=nothing, step=nothing, params=Dict(),
                dt=0.01, max_t=1.0, ode_step_len=1,
                logger=nothing, ode_option=Dict(), solver="rk4",
@@ -238,7 +238,7 @@ function init!(env::FymEnv;
     return env
 end
 
-function ode_wrapper(env::FymEnv)
+function ode_wrapper(env::BaseEnv)
     wrapper = function(y, kwargs, t)
         for system in _systems(env)
             state!(system, reshape(y[system.flat_index],
@@ -252,7 +252,7 @@ function ode_wrapper(env::FymEnv)
     return wrapper
 end
 
-function indexing!(env::FymEnv)
+function indexing!(env::BaseEnv)
     start = 0
     for system in _systems(env)
         system.state_length = prod(system.state_size)
@@ -267,68 +267,68 @@ function indexing!(env::FymEnv)
     end
 end
 
-function reset!(env::FymEnv)
+function reset!(env::BaseEnv)
     for system in _systems(env)
         reset!(system)
     end
     reset!(env.clock)
 end
 
-function state(env::FymEnv)
+function state(env::BaseEnv)
     return observe_flat(env)
 end
 
-function _systems(env::FymEnv)
+function _systems(env::BaseEnv)
     return values(systems(env))
 end
 
-function systems(env::FymEnv)
+function systems(env::BaseEnv)
     return env.systems
 end
 
-function systems!(env::FymEnv, systems::Dict)
+function systems!(env::BaseEnv, systems::Dict)
     env.systems = systems
     indexing!(env)
 end
 
-function dyn!(env::FymEnv, dyn)
+function dyn!(env::BaseEnv, dyn)
     env.dyn = dyn
 end
 
-function step!(env::FymEnv, step)
+function step!(env::BaseEnv, step)
     _step(args...; kwargs...) = step(env, args...; kwargs...)
     env.step = _step
 end
 
-function dyn(env::FymEnv)
+function dyn(env::BaseEnv)
     return env.dyn
 end
 
-function state!(env::FymEnv, state)
+function state!(env::BaseEnv, state)
     for system in _systems(env)
         state!(system, reshape(state[system.flat_index],
                                system.state_size))
     end
 end
 
-function dot(env::FymEnv)
+function dot(env::BaseEnv)
     return vcat([dot(system)[:]
                  for system in _systems(env)]...)  # flatten
 end
 
-function dot!(env::FymEnv, dot)
+function dot!(env::BaseEnv, dot)
     for system in _systems(env)
         system.dot = reshape(dot[system.flat_index], system.state_size)
     end
 end
 
-function observe_array(env::FymEnv; state=nothing)
+function observe_array(env::BaseEnv; state=nothing)
     res = []
     if state == nothing
         for system in _systems(env)
-            if typeof(system) <: FymSystem
+            if typeof(system) == BaseSystem
                 push!(res, state(system))
-            elseif typeof(system) <: FymEnv
+            elseif typeof(system) == BaseEnv
                 push!(res, observe_array(system))
             end
         end
@@ -338,7 +338,7 @@ function observe_array(env::FymEnv; state=nothing)
     return res
 end
 
-function observe_dict(env::FymEnv; state=nothing)
+function observe_dict(env::BaseEnv; state=nothing)
     res = Dict()
     if state == nothing
         for (name, system) in systems(env)
@@ -362,12 +362,12 @@ function observe_dict(env::FymEnv; state=nothing)
     return res
 end
 
-function observe_flat(env::FymEnv)
+function observe_flat(env::BaseEnv)
     return vcat([state(system)[:]
                  for system in _systems(env)]...)  # flatten
 end
 
-function ProgressMeter.update!(env::FymEnv; kwargs...)
+function ProgressMeter.update!(env::BaseEnv; kwargs...)
     t_hist = thist(env.clock)
     ode_hist = env.solver(
                           env.ode_func,
@@ -410,13 +410,13 @@ function ProgressMeter.update!(env::FymEnv; kwargs...)
     return t_hist, ode_hist, done || time_over(env.clock)
 end
 
-function close!(env::FymEnv)
+function close!(env::BaseEnv)
     if env.logger != nothing
         close!(env.logger)
     end
 end
 
-function render(env::FymEnv;
+function render(env::BaseEnv;
                 mode="ProgressMeter", desc="", dt=0.01, kwargs...)
     if mode == "ProgressMeter"
         if env.progressbar == nothing || time(env.clock) == 0
@@ -427,7 +427,7 @@ function render(env::FymEnv;
     end
 end
 
-function set_delay(env::FymEnv, systems::Array, T)
+function set_delay(env::BaseEnv, systems::Array, T)
     raise_unsupported_error()
 end
 

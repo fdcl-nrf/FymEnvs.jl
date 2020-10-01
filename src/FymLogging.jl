@@ -62,7 +62,7 @@ end
 function flush!(logger::Logger; info=nothing)
     h5open(logger.path, "r+") do h5file
         _rec_save!(h5file, "/", logger.buffer)
-        _info_save!(h5file, info)
+        # _info_save!(h5file, info)
     end
     clear!(logger)
 end
@@ -74,7 +74,7 @@ end
 function set_info!(logger::Logger, args...; kwargs...)
     _rec_update!(logger.info, Dict(zip(args, kwargs)))
     h5open(logger.path, "r+") do h5file
-        _info_save(h5file, logger.info)
+        # _info_save(h5file, logger.info)
     end
 end
 
