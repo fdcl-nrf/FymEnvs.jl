@@ -11,7 +11,7 @@ using Reexport
 using Revise
 
 
-import FymEnvs: close!, dyn
+import FymEnvs: close!
 
 include("FymLogging.jl")
 @reexport using .FymLogging

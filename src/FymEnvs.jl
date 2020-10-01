@@ -18,7 +18,6 @@ using Reexport
 # to avoid conflict; same name functions in different modules
 function close! end
 function record end
-function dyn end
 
 # Note: .FymLogging ->(reexport) .FymCore ->(reexport) .FymModels
 # include("FymCore.jl")

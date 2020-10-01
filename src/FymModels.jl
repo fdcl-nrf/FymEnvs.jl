@@ -9,26 +9,23 @@ This module provides dynamical equations of (famous) flight systems.
 using Reexport
 using Debugger
 
-import FymEnvs: dyn
-
 include("FymCore.jl")
 @reexport using .FymCore
 
 export FlightDynamicalSystems
-export system, dyn
 # flight dynamical systems list
 export F16LinearLateral
 
 ############ FlightDynamicalSystems ############
 abstract type FlightDynamicalSystems end
 
-function dyn(fds::FlightDynamicalSystems)
-    return fds.dyn
-end
+# function dyn(fds::FlightDynamicalSystems)
+#     return fds.dyn
+# end
 
-function system(fds::FlightDynamicalSystems)
-    return fds.system
-end
+# function system(fds::FlightDynamicalSystems)
+#     return fds.system
+# end
 
 
 mutable struct F16LinearLateral <: FlightDynamicalSystems
