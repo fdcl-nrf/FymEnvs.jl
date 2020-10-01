@@ -9,7 +9,8 @@ The origin version of this package, `Fym`, has been developed in `Python`.
 This is a Julia version of the `Fym`.
 
 In this module,
-some parts follows the convention of `Fym` e.g., `BaseEnv` and `BaseSystem`.
+some parts follows the convention of `Fym`,
+e.g., `BaseEnv` and `BaseSystem`.
 """
 module FymEnvs
 

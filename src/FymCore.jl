@@ -3,7 +3,6 @@ module FymCore
 
 The main core codes for `FymEnvs`.
 
-Note: numerical integration using package `DynamicalSystems` will be deprecated.
 """
 module FymCore
 
@@ -17,12 +16,8 @@ include("FymLogging.jl")
 @reexport using .FymLogging
 
 using ProgressMeter
-using Debugger  # TODO: delete it
+# using Debugger  # TODO: delete it
 
-# using DynamicalSystems
-# const DS = DynamicalSystems
-# const CDS = ContinuousDynamicalSystem
-# using DifferentialEquations
 using StaticArrays
 
 export FymEnv, BaseEnv
@@ -51,7 +46,8 @@ function init!(clock::Clock, dt, ode_step_len; max_t=10.0)
     clock.max_t = Float64(max_t)
     clock.max_len = floor(Int, (max_t / dt) + 1)
     clock.ode_step_len = Int64(ode_step_len)
-    clock.thist = collect(range(0.0, stop=dt, length=clock.ode_step_len + 1))
+    clock.thist = collect(range(0.0,
+                                stop=dt, length=clock.ode_step_len + 1))
     return clock
 end
 
@@ -121,7 +117,8 @@ function _show(sys::FymSystem; i=0)
         else
             space = "|   "
         end
-        push!(result, _add_space("$(String(symbol)): $value", i, space=space))
+        push!(result,
+              _add_space("$(String(symbol)): $value", i, space=space))
     end
     return join(result, "\n")
 end
@@ -131,8 +128,8 @@ function Base.show(io::IO, sys::FymSystem)
     println(io, res)
 end
 
-function init!(sys::BaseSystem;
-                    initial_state=nothing, state_size=(1, 1), name=nothing)
+function init!(sys::BaseSystem; initial_state=nothing,
+               state_size=(1, 1), name=nothing)
     if initial_state == nothing
         initial_state = zeros(state_size)
     end
@@ -168,8 +165,7 @@ end
 abstract type FymEnv end
 mutable struct BaseEnv <: FymEnv
     name
-    # systems::Dict{Any, Union{FymEnv, FymSystem}}
-    systems::Dict
+    systems::Dict{Any, Union{FymEnv, FymSystem}}
     dyn
     step
 
@@ -230,8 +226,8 @@ function init!(env::FymEnv;
 
     if solver == "rk4"
         env.solver = rk4
-    # elseif solver == "cds"
-    #     env.solver = cds
+    else
+        error("Unsupported solver")
     end
     dyn!(env, dyn)
     step!(env, step)
@@ -245,7 +241,8 @@ end
 function ode_wrapper(env::FymEnv)
     wrapper = function(y, kwargs, t)
         for system in _systems(env)
-            state!(system, reshape(y[system.flat_index], system.state_size))
+            state!(system, reshape(y[system.flat_index],
+                                   system.state_size))
         end
         env.dyn(env, t; kwargs...)
         res = vcat([dot(system)[:] for system in _systems(env)]...)
@@ -309,12 +306,14 @@ end
 
 function state!(env::FymEnv, state)
     for system in _systems(env)
-        state!(system, reshape(state[system.flat_index], system.state_size))
+        state!(system, reshape(state[system.flat_index],
+                               system.state_size))
     end
 end
 
 function dot(env::FymEnv)
-    return vcat([dot(system)[:] for system in _systems(env)]...)  # flatten
+    return vcat([dot(system)[:]
+                 for system in _systems(env)]...)  # flatten
 end
 
 function dot!(env::FymEnv, dot)
@@ -352,9 +351,11 @@ function observe_dict(env::FymEnv; state=nothing)
     else
         for (name, system) in systems(env)
             if typeof(system) == BaseSystem
-                res[name] = reshape(state[system.flat_index], system.state_size)
+                res[name] = reshape(state[system.flat_index],
+                                    system.state_size)
             elseif typeof(system) == BaseEnv
-                res[name] = observe_dict(system, state=state[system.flat_index])
+                res[name] = observe_dict(system,
+                                         state=state[system.flat_index])
             end
         end
     end
@@ -362,7 +363,8 @@ function observe_dict(env::FymEnv; state=nothing)
 end
 
 function observe_flat(env::FymEnv)
-    return vcat([state(system)[:] for system in _systems(env)]...)  # flatten
+    return vcat([state(system)[:]
+                 for system in _systems(env)]...)  # flatten
 end
 
 function ProgressMeter.update!(env::FymEnv; kwargs...)
@@ -372,14 +374,15 @@ function ProgressMeter.update!(env::FymEnv; kwargs...)
                           observe_flat(env),
                           t_hist,
                           kwargs,
-                          env.ode_option...
+                          env.ode_option...,
                          )
     done = false
     # TODO: low priority; add eager stop; should we?
     tfinal, yfinal = t_hist[end], ode_hist[end]
     # Update the systems' state
     for system in _systems(env)
-        state!(system, reshape(yfinal[system.flat_index], system.state_size))
+        state!(system, reshape(yfinal[system.flat_index],
+                               system.state_size))
     end
 
     # TODO: low priority; Log the inner history of states
@@ -388,7 +391,8 @@ function ProgressMeter.update!(env::FymEnv; kwargs...)
             state_dict = observe_dict(env, state=y)
             _info = Dict("time" => t, "state" => state_dict)
             if kwargs != nothing
-                if haskey(Dict(kwargs), "time") || haskey(Dict(kwargs), "state")
+                if haskey(Dict(kwargs), "time") || haskey(Dict(kwargs),
+                                                          "state")
                     error("invalid kwargs")
                 else
                     info = merge(_info, Dict(kwargs))
@@ -412,10 +416,12 @@ function close!(env::FymEnv)
     end
 end
 
-function render(env::FymEnv; mode="ProgressMeter", desc="", dt=0.01, kwargs...)
+function render(env::FymEnv;
+                mode="ProgressMeter", desc="", dt=0.01, kwargs...)
     if mode == "ProgressMeter"
         if env.progressbar == nothing || time(env.clock) == 0
-            env.progressbar = Progress(env.clock.max_len, dt, desc, kwargs...)
+            env.progressbar = Progress(env.clock.max_len, dt,
+                                       desc, kwargs...)
         end
         next!(env.progressbar)
     end
@@ -444,20 +450,6 @@ function rk4(func, y0, t, kwargs)
     end
     return y
 end
-
-# function cds(func, y0, t, kwargs, ode_option...)
-#     contdynsys = CDS(func,  # eom
-#                      y0,  # y0
-#                      kwargs,
-#                      t0=t[1];
-#                      ode_option...
-#                     )
-#     y = DS.trajectory(contdynsys,
-#                       t[end],  # T
-#                       dt=t[2]-t[1]  # dt
-#                      )
-#     return y
-# end
 
 
 end

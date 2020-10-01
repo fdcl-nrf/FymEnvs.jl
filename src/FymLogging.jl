@@ -22,7 +22,7 @@ mutable struct Logger
     info
     buffer
     len
-    Logger(args...; kwargs...) = init!(new(), args...; kwargs...)  # lazy init
+    Logger(args...; kwargs...) = init!(new(), args...; kwargs...)
 end
 
 function init!(logger::Logger;
@@ -62,7 +62,7 @@ end
 function flush!(logger::Logger; info=nothing)
     h5open(logger.path, "r+") do h5file
         _rec_save!(h5file, "/", logger.buffer)
-        # _info_save!(h5file, info)  # TODO
+        _info_save!(h5file, info)
     end
     clear!(logger)
 end
@@ -157,7 +157,6 @@ end
 
 function raise_unsupported_error()
     error("Unsupported function yet")
-    # TODO
 end
 
 
