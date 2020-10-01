@@ -3,7 +3,7 @@ module TestEnvs
 using LinearAlgebra
 using FymEnvs
 
-export test_env, step!
+export test_env
 
 
 function test_env(; controller=linear_controller,
@@ -14,6 +14,7 @@ function test_env(; controller=linear_controller,
                                             name=name))
     systems!(env, systems)
     dyn!(env, set_dyn)
+    step!(env, step)
     return env
 end
 
@@ -26,7 +27,7 @@ function set_dyn(env, t)
     sys.dot = A*x + B*u
 end
 
-function step!(env)
+function step(env; action=nothing)
     t = time(env.clock)
     sys = env.systems["test_sys"]
     x = sys.state

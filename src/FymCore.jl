@@ -31,7 +31,7 @@ export Clock
 
 export update!, close!, reset!, render
 export observe_array, observe_dict, observe_flat
-export systems!, dyn!
+export systems!, dyn!, step!
 export time_over, time
 
 
@@ -171,6 +171,7 @@ mutable struct BaseEnv <: FymEnv
     # systems::Dict{Any, Union{FymEnv, FymSystem}}
     systems::Dict
     dyn
+    step
 
     dt::Float64
     clock::Clock
@@ -214,14 +215,13 @@ function Base.show(io::IO, env::FymEnv)
 end
 
 function init!(env::FymEnv;
-               systems=Dict(), dyn=nothing, params=Dict(),
+               systems=Dict(), dyn=nothing, step=nothing, params=Dict(),
                dt=0.01, max_t=1.0, ode_step_len=1,
                logger=nothing, ode_option=Dict(), solver="rk4",
                name=nothing,
               )
     env.name = name
     systems!(env, systems)
-    env.params = params
 
     env.clock = Clock(dt, ode_step_len, max_t=max_t)
     env.dt = env.clock.dt
@@ -234,9 +234,11 @@ function init!(env::FymEnv;
     #     env.solver = cds
     end
     dyn!(env, dyn)
+    step!(env, step)
     env.ode_func = ode_wrapper(env)
     env.ode_option = ode_option
     env.progressbar = nothing
+    env.params = params
     return env
 end
 
@@ -294,6 +296,11 @@ end
 
 function dyn!(env::FymEnv, dyn)
     env.dyn = dyn
+end
+
+function step!(env::FymEnv, step)
+    _step(args...; kwargs...) = step(env, args...; kwargs...)
+    env.step = _step
 end
 
 function dyn(env::FymEnv)

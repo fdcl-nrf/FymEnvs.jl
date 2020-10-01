@@ -24,7 +24,7 @@ function test_Fym()
         A = Matrix(I, 3, 3)
         sys.dot = -A * x
     end
-    function step!(env)
+    function step(env)
         t = time(env.clock)
         sys = env.systems["sys"]
         x = sys.state
@@ -47,13 +47,14 @@ function test_Fym()
     env = BaseEnv(max_t=100.00, logger=logger, name="test_env")
     systems!(env, systems)  # set systems; required
     dyn!(env, set_dyn)  # set dynamics; required
+    step!(env, step)  # set dynamics; required
 
     reset!(env)  # reset env; required before propagation
     obs = observe_flat(env)
     i = 0
     @time while true
         render(env)  # not mendatory; would make simulator slow
-        next_obs, reward, done, info = step!(env)
+        next_obs, reward, done, info = env.step()
         obs = next_obs
         i += 1
         if done
@@ -86,7 +87,7 @@ function test_largescale_env()
         env.systems["sys"].dot = -p * A * x
         env.systems["sys2"].dot = -B * y
     end
-    function step!(env, action=nothing)
+    function step(env, action=nothing)
         t = time(env.clock)
         x = env.systems["sys"].state
         y = env.systems["sys2"].state
@@ -119,13 +120,14 @@ function test_largescale_env()
     env = BaseEnv(max_t=100.00, logger=logger)
     systems!(env, systems)
     dyn!(env, set_dyn)
+    step!(env, step)
     # functions
     reset!(env)  # reset!
     # simulation
     obs = observe_flat(env)
     i = 0
     @time while true
-        next_obs, reward, done, info = step!(env)
+        next_obs, reward, done, info = env.step()
         obs = next_obs
         i += 1
         if done
@@ -168,8 +170,9 @@ function _sample(env, agent, log_dir, file_name)
     i = 0
     @time while true
         if agent == nothing
+            action = nothing
         end
-        next_obs, reward, done, info = step!(env)
+        next_obs, reward, done, info = env.step(action=action)
         record(logger, info)
         obs = next_obs
         i += 1

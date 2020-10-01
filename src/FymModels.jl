@@ -153,7 +153,7 @@ function deriv(f16::F16LinearLateral)
     return deriv
 end
 
-function system(f16::GlidingVehicle3DOF)
+function system(f16::F16LinearLateral)
     initial_state = f16.initial_state
     name = f16.name
     return BaseSystem(initial_state=initial_state, name=name)
