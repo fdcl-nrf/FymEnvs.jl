@@ -9,7 +9,7 @@ This package is also highly inspired by [`Gym`](https://gym.openai.com/), OpenAI
 The usage of **FymEnvs.jl** is very similar to `fym`,
 but there is a significant difference: *does not inherit BaseEnv* like class in `Python`.
 It may be awkward to the users from the original `fym`.
-To create your own `FymEnv`,
+**NOTICE**: To create your own `FymEnv`,
 it is *highly recommended* to see
 the contents about custom environments in directory `test`.
 
@@ -89,8 +89,7 @@ env =
 size((data["state"])["sys"]) = (10000, 3)
 ```
 
-For more examples such as simulation with custom environments,
-see directory `test`.
+For more examples, see directory `test`.
 
 ## Notice
 ### **FymEnvs.jl** does not directly support `Gym`'s features.
