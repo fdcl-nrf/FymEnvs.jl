@@ -1,9 +1,9 @@
 module TestEnvs
 
 using LinearAlgebra
+using Parameters
 using FymEnvs
 
-export test_env
 export TestEnv
 
 
@@ -14,23 +14,23 @@ mutable struct TestEnv <: FymEnv
 end
 
 function init!(fym::TestEnv;
-               controller=linear_controller, x0=ones(3), kwargs...)
+               controller=LinearController(), x0=ones(3), kwargs...)
     fym.env = BaseEnv(; kwargs...)
     fym.controller = controller
 
-    function set_dyn(env, t; fym::TestEnv=fym)
+    function set_dyn(env, t)
         sys = env.systems["test_sys"]
         x = sys.state
-        u = fym.controller(x)
+        u = get(fym.controller, x)
         A = Matrix(I, 3, 3)
         B = Matrix(I, 3, 3)
         sys.dot = A*x + B*u
     end
-    function step(env; action=nothing, fym::TestEnv=fym)
+    function step(env; action=nothing)
         t = time(env.clock)
         sys = env.systems["test_sys"]
         x = sys.state
-        u = fym.controller(x)
+        u = get(fym.controller, x)
         info = Dict("time" => t, "state" => x, "input" => u)
 
         update!(env)
@@ -49,9 +49,10 @@ function init!(fym::TestEnv;
 end
 
 
-function linear_controller(x; K=3*Matrix(I, 3, 3))
-    return -K*x
+@with_kw mutable struct LinearController
+    K = 3*Matrix(I, 3, 3)
 end
+get(ctrl::LinearController, x) = -ctrl.K * x
 
 
 end

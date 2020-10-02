@@ -171,7 +171,7 @@ function test_custom_fym()
     log_dir = "data/test"
     file_name = "custom.h5"
     reset!(env)
-    _sample(env, nothing, log_dir, file_name)
+    _sample(fym, nothing, log_dir, file_name)
     data = load(joinpath(log_dir, file_name))
     for name in ["state", "input"]
         p = plot(data["time"], data[name])
@@ -179,13 +179,37 @@ function test_custom_fym()
     end
 end
 
-function _sample(env, agent, log_dir, file_name)
+function _sample(env::BaseEnv, agent, log_dir, file_name)
     logger = Logger(log_dir=log_dir, file_name=file_name, max_len=1000)
     obs = observe_flat(env)
     i = 0
     @time while true
         if agent == nothing
             action = nothing
+        end
+        next_obs, reward, done, info = env.step(action=action)
+        record(logger, info)
+        obs = next_obs
+        i += 1
+        if done
+            break
+        end
+    end
+    close!(env)
+    close!(logger)
+end
+
+function _sample(fym::FymEnv, agent, log_dir, file_name)
+    env = fym.env
+    logger = Logger(log_dir=log_dir, file_name=file_name, max_len=1000)
+    obs = observe_flat(env)
+    i = 0
+    @time while true
+        if agent == nothing
+            action = nothing
+            if time(env.clock) > 0.5
+                fym.controller.K = - 3*Matrix(I, 3, 3)
+            end
         end
         next_obs, reward, done, info = env.step(action=action)
         record(logger, info)
