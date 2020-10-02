@@ -18,14 +18,14 @@ function test_f16linearlateral()
         info = Dict("time" => t, "state" => x, "input" => u)
         return next_obs, reward, done, info
     end
-    function set_dyn(env, t; deriv=deriv(f16))
+    function set_dyn(env, t; deriv=f16.deriv)
         sys = env.systems["f16"]
         x = sys.state
         u = zeros(2)
         sys.dot = deriv(x, u)
     end
 
-    systems = Dict("f16" => system(f16))
+    systems = Dict("f16" => f16.system)
     env = BaseEnv()
     systems!(env, systems)
     dyn!(env, set_dyn)
@@ -59,14 +59,14 @@ function test_glidingvehicle3dof()
         info = Dict("time" => t, "state" => state, "input" => input)
         return next_obs, reward, done, info
     end
-    function set_dyn(env, t; deriv=deriv(gv3))
+    function set_dyn(env, t; deriv=gv3.deriv)
         sys = env.systems["gv3"]
         state = sys.state
         input = zeros(2)
         sys.dot = deriv(state, input)
     end
 
-    systems = Dict("gv3" => system(gv3))
+    systems = Dict("gv3" => gv3.system)
     env = BaseEnv()
     systems!(env, systems)
     dyn!(env, set_dyn)

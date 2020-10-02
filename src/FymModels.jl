@@ -2,14 +2,17 @@ module FymModels
 """
 module FymModels
 
-This module provides dynamical equations of (famous) flight systems.
-
-Usually, you would need to fill keyword argument `initial_state`.
+This module provides environments and systems of famous flight systems,
+a.k.a. FymEnv and FymSystem, respectively.
 
 [Usage]
+- FymEnv
+
+- FymSystem
+
 f16 = F16LinearLateral(initial_state=ones(7))
 systems = Dict("f16" => system(f16))
-# Note: typeof(system(fds::FlightDynamicalSystems)) == BaseSystem
+# Note: typeof(system(fds::FymSystem)) == BaseSystem
 function step(env)
     update!(env)
     next_obs = sys.state
@@ -41,17 +44,26 @@ using Parameters
 include("FymCore.jl")
 @reexport using .FymCore
 
-export FlightDynamicalSystems
-export system, deriv
+export FymEnv
+export FymSystem
 
-# flight dynamical systems list
+# FymSystem list
 export F16LinearLateral, GlidingVehicle3DOF
 
-############ FlightDynamicalSystems ############
-abstract type FlightDynamicalSystems end
+
+############ FymEnv ############
+abstract type FymEnv end
+export FymEnv
+# Rule of the type `FymEnv`
+# 1) your custom env should be a subtype of `FymEnv`:
+    # CustomEnv <: FymEnv == true
+# 2) your custom env should have a field `env`, whose type is BaseEnv:
+    # typeof(CustomEnv.env) == BaseEnv
 
 
-@with_kw mutable struct GlidingVehicle3DOF <: FlightDynamicalSystems
+############ FymSystem ############
+abstract type FymSystem end
+@with_kw mutable struct GlidingVehicle3DOF <: FymSystem
     """
     Reference:
         TBD (borrowed from the original fym, but notation is different)
@@ -76,35 +88,26 @@ abstract type FlightDynamicalSystems end
     _term = 0.5 * (rho * S) / m
 
     initial_state = [0, 0, -5.0, 13.0, 0, 0]
-end
-
-function deriv(gv3::GlidingVehicle3DOF)
-    # TODO: add wind
+    system = BaseSystem(initial_state=initial_state, name=name)
     deriv = function(state, input)
+        # TODO: add wind
         x, y, z, V, gamma, chi = state
         CL, phi = input
-        CD = gv3.CD0 + gv3.CD1^2
+        CD = CD0 + CD1^2
 
         dxdt = V *cos(gamma) * cos(chi)
         dydt = V * cos(gamma) * sin(chi)
         dzdt = - V * sin(gamma)
-        dVdt = - gv3._term * V^2 * CD - gv3.g * sin(gamma)
-        dgammadt = (gv3._term * V * CL * cos(phi)
-                    - gv3.g * cos(gamma) / V)
-        dchidt = gv3._term * V / cos(gamma) * CL * sin(phi)
+        dVdt = - _term * V^2 * CD - g * sin(gamma)
+        dgammadt = (_term * V * CL * cos(phi)
+                    - g * cos(gamma) / V)
+        dchidt = _term * V / cos(gamma) * CL * sin(phi)
         return [dxdt, dydt, dzdt, dVdt, dgammadt, dchidt]
     end
-    return deriv
-end
-
-function system(gv3::GlidingVehicle3DOF)
-    initial_state = gv3.initial_state
-    name = gv3.name
-    return BaseSystem(initial_state=initial_state, name=name)
 end
 
 
-@with_kw mutable struct F16LinearLateral <: FlightDynamicalSystems
+@with_kw mutable struct F16LinearLateral <: FymSystem
     """
     Reference:
         B. L. Stevens et al. "Aircraft Control and Simulation", 3/e, 2016
@@ -144,21 +147,11 @@ end
     name = "f16"
 
     initial_state = [1.0, 0, 0, 0, 0, 0, 0]
-end
-
-function deriv(f16::F16LinearLateral)
+    system = BaseSystem(initial_state=initial_state, name=name)
     deriv = function(x, u)
-        return f16.A * x + f16.B * u
+        return A * x + B * u
     end
-    return deriv
 end
-
-function system(f16::F16LinearLateral)
-    initial_state = f16.initial_state
-    name = f16.name
-    return BaseSystem(initial_state=initial_state, name=name)
-end
-
 
 
 end

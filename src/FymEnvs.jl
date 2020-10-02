@@ -29,13 +29,5 @@ include("FymModels.jl")
 # @reexport using .FymLogging
 @reexport using .FymModels
 
-abstract type FymEnv end
-export FymEnv
-# Rule of the type `FymEnv`
-# 1) your custom env should be a subtype of `FymEnv`:
-    # CustomEnv <: FymEnv == true
-# 2) your custom env should have a field `env`, whose type is BaseEnv:
-    # typeof(CustomEnv.env) == BaseEnv
-
 
 end

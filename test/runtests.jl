@@ -5,8 +5,10 @@ using Plots
 ENV["GKSwstype"]="nul"  # do not show plot
 using Debugger
 
-using Revise; includet("custom_env.jl")  # to avoid conflict
-using .TestEnvs
+if !isdefined(Main, :TestEnvs)
+    using Revise; includet("custom_env.jl")  # to avoid conflict
+    using .TestEnvs
+end
 
 
 function print_msg(test_name)
