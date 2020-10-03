@@ -70,7 +70,6 @@ function Base.time(clock::Clock)
 end
 
 "Check if the time is larger than max_t."
-function Base.time(clock::Clock)
 function time_over(clock::Clock; t=nothing)
     if t == nothing
         return time(clock) >= clock.max_t
