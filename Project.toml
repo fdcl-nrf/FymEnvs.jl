@@ -1,7 +1,7 @@
 name = "FymEnvs"
 uuid = "d6fd7ba0-2ca9-4676-ba23-5bed9e863cfb"
 authors = ["JinraeKim <kjl950403@gmail.com> and contributors"]
-version = "0.2.2"
+version = "0.1.0"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
