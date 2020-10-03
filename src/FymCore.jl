@@ -382,9 +382,9 @@ function dot!(env::BaseEnv, dot)
     end
 end
 
-function observe_array(env::BaseEnv; state=nothing)
+function observe_array(env::BaseEnv; y=nothing)
     res = []
-    if state == nothing
+    if y == nothing
         for system in _systems(env)
             if typeof(system) == BaseSystem
                 push!(res, state(system))
@@ -398,9 +398,9 @@ function observe_array(env::BaseEnv; state=nothing)
     return res
 end
 
-function observe_dict(env::BaseEnv; state=nothing)
+function observe_dict(env::BaseEnv; y=nothing)
     res = Dict()
-    if state == nothing
+    if y == nothing
         for (name, system) in systems(env)
             if typeof(system) == BaseSystem
                 res[name] = state(system)
@@ -411,11 +411,11 @@ function observe_dict(env::BaseEnv; state=nothing)
     else
         for (name, system) in systems(env)
             if typeof(system) == BaseSystem
-                res[name] = reshape(state[system.flat_index],
+                res[name] = reshape(y[system.flat_index],
                                     system.state_size)
             elseif typeof(system) == BaseEnv
                 res[name] = observe_dict(system,
-                                         state=state[system.flat_index])
+                                         y=y[system.flat_index])
             end
         end
     end
@@ -448,7 +448,7 @@ function ProgressMeter.update!(env::BaseEnv; kwargs...)
     # TODO: low priority; Log the inner history of states
     if env.logger != nothing
         for (t, y) in zip(t_hist[1:end-1], ode_hist[1:end-1])
-            state_dict = observe_dict(env, state=y)
+            state_dict = observe_dict(env, y=y)
             _info = Dict("time" => t, "state" => state_dict)
             if kwargs != nothing
                 if haskey(Dict(kwargs), "time") || haskey(Dict(kwargs),
