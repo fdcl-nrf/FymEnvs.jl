@@ -1,4 +1,3 @@
-module FymModels
 """
 module FymModels
 
@@ -35,6 +34,7 @@ reset!(env)
 ⋮
 
 """
+module FymModels
 
 
 using Reexport
@@ -63,20 +63,20 @@ export FymEnv
 
 ############ FymSystem ############
 abstract type FymSystem end
+"""
+Reference:
+    TBD (borrowed from the original fym, but notation is different)
+Note:
+    state = [x, y, z, V, gamma, chi]
+        x, y, z: NED position [m]
+        V: (ground) speed [m/s]
+        gamma: vertical flight path angle [rad]
+        chi: horizontal flight path angle [rad]
+    input = [CL, phi]
+        CL: lift coefficient
+        phi: bank angle [rad]
+"""
 @with_kw mutable struct GlidingVehicle3DOF <: FymSystem
-    """
-    Reference:
-        TBD (borrowed from the original fym, but notation is different)
-    Note:
-        state = [x, y, z, V, gamma, chi]
-            x, y, z: NED position [m]
-            V: (ground) speed [m/s]
-            gamma: vertical flight path angle [rad]
-            chi: horizontal flight path angle [rad]
-        input = [CL, phi]
-            CL: lift coefficient
-            phi: bank angle [rad]
-    """
     g = 9.80665
     rho = 1.2215
     m = 8.5
@@ -107,19 +107,19 @@ abstract type FymSystem end
 end
 
 
+"""
+Reference:
+    B. L. Stevens et al. "Aircraft Control and Simulation", 3/e, 2016
+    Example 5.3-1: LQR Design for F-16 Lateral Regulator
+Dynamics:
+    x_dot = Ax + Bu
+State:
+    x = [beta, phi, p, r, del_a, del_r, x_w]
+    beta, phi: [rad], p, r: [rad/s], del_a, del_r: [deg]
+Control input:
+    u = [u_a, u_r]  (aileron and rudder servo inputs, [deg])
+"""
 @with_kw mutable struct F16LinearLateral <: FymSystem
-    """
-    Reference:
-        B. L. Stevens et al. "Aircraft Control and Simulation", 3/e, 2016
-        Example 5.3-1: LQR Design for F-16 Lateral Regulator
-    Dynamics:
-        x_dot = Ax + Bu
-    State:
-        x = [beta, phi, p, r, del_a, del_r, x_w]
-        beta, phi: [rad], p, r: [rad/s], del_a, del_r: [deg]
-    Control input:
-        u = [u_a, u_r]  (aileron and rudder servo inputs, [deg])
-    """
     A = [
          [-0.322 0.064 0.0364 -0.9917 0.0003 0.0008 0];
          [0 0 1 0.0037 0 0 0];

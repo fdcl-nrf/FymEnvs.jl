@@ -64,10 +64,13 @@ function time!(clock::Clock, t)
     clock.t = t  # array
 end
 
+"Get the current time from clock."
 function Base.time(clock::Clock)
     return clock.t
 end
 
+"Check if the time is larger than max_t."
+function Base.time(clock::Clock)
 function time_over(clock::Clock; t=nothing)
     if t == nothing
         return time(clock) >= clock.max_t
@@ -266,6 +269,13 @@ function indexing!(env::BaseEnv)
     end
 end
 
+"""
+    reset!(env::BaseEnv)
+
+Reset BaseEnv.
+All initial_state will be assigned to state of BaseSystems.
+It is recommended to extend this method when using custom FymEnv.
+"""
 function reset!(env::BaseEnv)
     for system in _systems(env)
         reset!(system)
@@ -285,15 +295,67 @@ function systems(env::BaseEnv)
     return env.systems
 end
 
+"""
+    systems!(env::BaseEnv, systems::Dict)
+
+Set systems of `env`. Required before reset!.
+
+# Examples
+```julia
+systems = Dict("sys" => BaseSystem(initial_state=zeros(3)))
+env = BaseEnv()
+systems!(env, systems)
+```
+"""
 function systems!(env::BaseEnv, systems::Dict)
     env.systems = systems
     indexing!(env)
 end
 
+"""
+    dyn!(env::BaseEnv, dyn)
+Set dynamics of each systems in `env`. Required before reset!.
+`dot` of all systems of `env` should be assigned in function `dyn`.
+
+# Examples
+```julia
+function set_dyn(env, t)
+    sys = env.systems["sys"]
+    x = sys.state
+    A = Matrix(I, 3, 3)
+    sys.dot = -A * x
+end
+env = BaseEnv()
+dyn!(env, set_dyn)
+```
+"""
 function dyn!(env::BaseEnv, dyn)
     env.dyn = dyn
 end
 
+"""
+    step!(env::BaseEnv, step)
+Set transition behaviour of `env` for each step.
+Required before reset!.
+It must contain `update!`.
+
+# Examples
+```julia
+function step(env)
+    t = time(env.clock)
+    sys = env.systems["sys"]
+    x = sys.state
+    update!(env)
+    next_obs = sys.state
+    reward = zeros(1)
+    done = time_over(env.clock)
+    info = Dict("time" => t, "state" => x)
+    return next_obs, reward, done, info
+end
+env = BaseEnv()
+step!(env, step)
+```
+"""
 function step!(env::BaseEnv, step)
     _step(args...; kwargs...) = step(env, args...; kwargs...)
     env.step = _step
@@ -409,6 +471,8 @@ function ProgressMeter.update!(env::BaseEnv; kwargs...)
     return t_hist, ode_hist, done || time_over(env.clock)
 end
 
+"Close `env`.
+To save data in env's logger, you must `close!` after simulation."
 function close!(env::BaseEnv)
     if env.logger != nothing
         close!(env.logger)
