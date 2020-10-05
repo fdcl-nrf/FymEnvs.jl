@@ -6,17 +6,15 @@ The main core codes for `FymEnvs`.
 """
 module FymCore
 
-using Reexport
-using Revise
-
 
 import FymEnvs: close!
 
+using Reexport
 include("FymLogging.jl")
 @reexport using .FymLogging
 
 using ProgressMeter
-# using Debugger  # TODO: delete it
+# using Debugger
 
 using StaticArrays
 

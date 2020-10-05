@@ -3,10 +3,11 @@ using LinearAlgebra
 
 using Plots
 ENV["GKSwstype"]="nul"  # do not show plot
-using Debugger
+# using Debugger
 
 if !isdefined(Main, :TestEnvs)
-    using Revise; includet("custom_env.jl")  # to avoid conflict
+    # using Revise; includet("custom_env.jl")  # to avoid conflict
+    include("custom_env.jl")  # to avoid conflict
     using .TestEnvs
 end
 
