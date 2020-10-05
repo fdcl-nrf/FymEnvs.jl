@@ -31,6 +31,13 @@ export time_over, time
 
 
 ############ Clock ############
+"""
+    Clock
+
+# Arguments
+max_t: maximum (minimum) terminal time for forward (backward) integration,
+respectively.
+"""
 mutable struct Clock
     t::Float64
     dt::Float64
@@ -51,8 +58,8 @@ function init!(clock::Clock, dt, ode_step_len; max_t=10.0)
     return clock
 end
 
-function reset!(clock::Clock)
-    clock.t = 0.0
+function reset!(clock::Clock; t=0.0)
+    clock.t = t
     return clock
 end
 
@@ -72,16 +79,17 @@ end
 "Check if the time is larger than max_t."
 function time_over(clock::Clock; t=nothing)
     if t == nothing
-        return time(clock) >= clock.max_t
+        return sign(clock.dt) * (time(clock) - clock.max_t) >= 0.0
     else
-        return t >= clock.max_t
+        return sign(clock.dt) * (t - clock.max_t) >= 0.0
     end
 end
 
 function thist(clock::Clock)
     thist = clock.thist .+ time(clock)
     if time_over(clock, t=thist[end])
-        index = findfirst(thist .> clock.max_t)
+        index = findfirst(sign(clock.dt)*(thist .- clock.max_t) .> 0.0)
+        # index = findfirst(thist .> clock.max_t)
         if index == nothing
             return thist
         else
@@ -106,21 +114,9 @@ end
 
 function _show(sys::BaseSystem; i=0)
     result = []
-    for symbol in [:name, :state, :dot, :initial_state,
-                   :state_size, :flat_index]
-        if isdefined(sys, symbol)
-            value = getproperty(sys, symbol)
-        else
-            value = "undef"
-        end
-        if symbol == :name
-            space = "+---"
-        else
-            space = "|   "
-        end
-        push!(result,
-              _add_space("$(String(symbol)): $value", i, space=space))
-    end
+    _stack_property!(result, sys,
+                     [:name, :state, :dot, :initial_state,
+                      :state_size, :flat_index], i=i)
     return join(result, "\n")
 end
 
@@ -169,6 +165,7 @@ mutable struct BaseEnv
     dyn
     step
 
+    initial_time
     dt::Float64
     clock::Clock
     progressbar
@@ -191,9 +188,29 @@ function _add_space(string, i; space=" "^4)
     return space^i * string
 end
 
+function _stack_property!(result, sys, symbol_array; i=0, space="")
+    for symbol in symbol_array
+        if isdefined(sys, symbol)
+            value = getproperty(sys, symbol)
+        else
+            value = "undef"
+        end
+        if symbol == :name
+            space = "+---"
+        else
+            space = "|   "
+        end
+        push!(result, _add_space("$(String(symbol)): $value", i, space=space))
+        # push!(result, _add_space("$(String(symbol)): $value", 0))
+    end
+end
+
 function _show(env::BaseEnv; i=0)
     result = []
-    push!(result, _add_space("name: $(env.name)", i, space="+---"))
+    _stack_property!(result, env, [:name])  # from env
+    if i == 0
+        _stack_property!(result, env.clock, [:max_t, :dt])  # from env.clock
+    end
     for system in _systems(env)
         if typeof(system) == BaseSystem
             v_str = _show(system, i=i+1)
@@ -213,7 +230,8 @@ end
 function init!(env::BaseEnv;
                systems=Dict(), dyn=nothing, step=nothing,
                # params=Dict(),
-               dt=0.01, max_t=1.0, ode_step_len=1,
+               initial_time=0.0, dt=0.01, max_t=1.0,
+               ode_step_len=1,
                logger=nothing, ode_option=Dict(), solver="rk4",
                name=nothing,
               )
@@ -221,7 +239,7 @@ function init!(env::BaseEnv;
     systems!(env, systems)
 
     env.clock = Clock(dt, ode_step_len, max_t=max_t)
-    env.dt = env.clock.dt
+    env.initial_time = initial_time
 
     env.logger = logger
 
@@ -279,7 +297,7 @@ function reset!(env::BaseEnv)
     for system in _systems(env)
         reset!(system)
     end
-    reset!(env.clock)
+    reset!(env.clock, t=env.initial_time)
 end
 
 function state(env::BaseEnv)

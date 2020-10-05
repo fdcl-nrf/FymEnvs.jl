@@ -47,7 +47,7 @@ systems = Dict("sys" => BaseSystem(initial_state=x0, name="3d_sys"))
 log_dir = "data/test"
 file_name = "fym.h5"
 logger = Logger(log_dir=log_dir, file_name=file_name)
-env = BaseEnv(max_t=100.00, logger=logger, name="test_env")
+env = BaseEnv(max_t=100.00, logger=logger, name="test_env",)
 systems!(env, systems)  # set systems; required
 dyn!(env, set_dyn)  # set dynamics; required
 step!(env, step)  # set step; required
@@ -66,27 +66,27 @@ i = 0
 end
 close!(env)
 data = load(env.logger.path)
-@show env
-@show size(data["state"]["sys"])
+show(env)
+show(size(data["state"]["sys"]))
 ```
 
 Result:
 
 ```julia
 # time and progressbar
-99%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▌ |  ETA: 0:00:00
-0.744015 seconds (3.85 M allocations: 225.629 MiB, 3.30% gc time)
+ 99%|████████████████████████████████████████████████████████████████████████████████████▏|  ETA: 0:00:00  3.513103 seconds (11.45 M allocations: 621.034 MiB, 3.28% gc time)
 # representation, i.e., show (nested env supported)
 name: test_env
+max_t: 100.0
+dt: 0.01
 +---name: 3d_sys
 |   state: [3.7200760072278747e-44, 7.440152014455749e-44, 1.1160228021683672e-43]
 |   dot: [-3.7200756925403154e-44, -7.440151385080631e-44, -1.1160227077620995e-43]
 |   initial_state: [1.0, 2.0, 3.0]
 |   state_size: (3,)
 |   flat_index: 1:3
-env =
 # saved data
-size((data["state"])["sys"]) = (10000, 3)
+(10000, 3)
 ```
 
 For more examples, see directory `test`.
