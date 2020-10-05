@@ -25,6 +25,8 @@ Registrator = "1.2"
 Revise = "3.1"
 StaticArrays = "0.12"
 julia = "1.5"
+Plots = "1.6"
+Parameters = "0.12"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
