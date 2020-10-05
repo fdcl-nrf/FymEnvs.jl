@@ -46,7 +46,7 @@ function test_Fym()
     log_dir = "data/test"
     file_name = "fym.h5"
     logger = Logger(log_dir=log_dir, file_name=file_name)
-    env = BaseEnv(max_t=100.00, logger=logger, name="test_env")
+    env = BaseEnv(max_t=100.00, logger=logger, name="test_env",)
     systems!(env, systems)  # set systems; required
     dyn!(env, set_dyn)  # set dynamics; required
     step!(env, step)  # set step; required
@@ -65,8 +65,61 @@ function test_Fym()
     end
     close!(env)
     data = load(env.logger.path)
-    @show env
-    @show size(data["state"]["sys"])
+    show(env)
+    show(size(data["state"]["sys"]))
+end
+
+function test_reverse_time()
+    print_msg("reverse_time")
+    function set_dyn(env, t)
+        # corresponding to `set_dot` of the original fym
+        # you can use any names in this package
+        sys = env.systems["sys"]
+        x = sys.state
+        A = Matrix(I, 3, 3)
+        sys.dot = -A * x
+    end
+    function step(env)
+        t = time(env.clock)
+        sys = env.systems["sys"]
+        x = sys.state
+        update!(env)
+        next_obs = sys.state
+        reward = zeros(1)
+        done = time_over(env.clock)
+        info = Dict(
+                    "time" => t,
+                    "state" => x,
+                   )
+        return next_obs, reward, done, info
+    end
+
+    x0 = collect(1:3)
+    systems = Dict("sys" => BaseSystem(initial_state=x0, name="3d_sys"))
+    log_dir = "data/test"
+    file_name = "fym.h5"
+    logger = Logger(log_dir=log_dir, file_name=file_name)
+    env = BaseEnv(max_t=0.00, dt=-0.01, initial_time=1.0, logger=logger, name="test_env",)
+    systems!(env, systems)  # set systems; required
+    dyn!(env, set_dyn)  # set dynamics; required
+    step!(env, step)  # set step; required
+
+    reset!(env)  # reset env; required before propagation
+    obs = observe_flat(env)
+    i = 0
+    @time while true
+        render(env)  # not mendatory; would make simulator slow
+        next_obs, reward, done, info = env.step()
+        obs = next_obs
+        i += 1
+        if done
+            break
+        end
+    end
+    close!(env)
+    data = load(env.logger.path)
+    show(env)
+    show(size(data["state"]["sys"]))
 end
 
 function test_largescale_env()
@@ -110,7 +163,7 @@ function test_largescale_env()
                    "sys" => BaseSystem(initial_state=x0),
                    "sys2" => BaseSystem(initial_state=y0),
                   )
-    env0 = BaseEnv(systems=systems0, dyn=set_dyn0)
+    env0 = BaseEnv(systems=systems0, dyn=set_dyn0, name="env0")
     systems = Dict(
                    "sys" => BaseSystem(initial_state=x0),
                    "sys2" => BaseSystem(initial_state=y0),
@@ -119,7 +172,7 @@ function test_largescale_env()
     log_dir = "data/test"
     file_name = "largescale.h5"
     logger = Logger(log_dir=log_dir, file_name=file_name)
-    env = BaseEnv(max_t=100.00, logger=logger)
+    env = BaseEnv(max_t=10.00, logger=logger, name="env")
     systems!(env, systems)
     dyn!(env, set_dyn)
     step!(env, step)
@@ -151,6 +204,7 @@ function test_largescale_env()
     savefig(p2, joinpath(log_dir, "state2.pdf"))
     savefig(env0p, joinpath(log_dir, "env0state.pdf"))
     savefig(env0p2, joinpath(log_dir, "env0state2.pdf"))
+    show(env)
 end
 
 function test_custom_env()
@@ -227,6 +281,7 @@ end
 
 function test_all()
     test_Fym()
+    test_reverse_time()
     test_largescale_env()
     test_custom_fym()
 end
