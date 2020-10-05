@@ -98,6 +98,8 @@ For more examples, see directory `test`.
 The following features are supported in **FymEnvs.jl**:
 - Nested environments
     - An environment can contain other environments as its systems.
+- Backward integration
+    - Can perform backward integration with keyword argument `dt (< 0.0).`
 
 ### Not supported features
 There are some features of `fym`, not realised yet. Here's the list:
