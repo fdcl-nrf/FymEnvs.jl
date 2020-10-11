@@ -229,7 +229,8 @@ function test_custom_fym()
     file_name = "custom.h5"
     reset!(env)
     _sample(fym, nothing, log_dir, file_name)
-    data = load(joinpath(log_dir, file_name))
+    data, info = load(joinpath(log_dir, file_name),
+                      with_info=true)
     for name in ["state", "input"]
         p = plot(data["time"], data[name])
         savefig(p, joinpath(log_dir, "custom_"*name*".pdf"))
@@ -273,6 +274,10 @@ function _sample(fym::FymEnv, agent, log_dir, file_name)
         obs = next_obs
         i += 1
         if done
+            config = Dict(
+                          "name" => env.name,
+                       )
+            set_info!(logger, config)
             break
         end
     end
@@ -281,9 +286,9 @@ function _sample(fym::FymEnv, agent, log_dir, file_name)
 end
 
 function test_all()
-    test_Fym()
-    test_reverse_time()
-    test_largescale_env()
+    # test_Fym()
+    # test_reverse_time()
+    # test_largescale_env()
     test_custom_fym()
 end
 
