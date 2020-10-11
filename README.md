@@ -100,6 +100,8 @@ The following features are supported in **FymEnvs.jl**:
     - An environment can contain other environments as its systems.
 - Backward integration
     - Can perform backward integration with keyword argument `dt (< 0.0).`
+- Log data
+    - Can log simulation data and configuration using `Logger`.
 
 ### Not supported features
 There are some features of `fym`, not realised yet. Here's the list:
