@@ -10,8 +10,9 @@ import FymEnvs: close!, record
 
 using HDF5
 using Dates
+# using Debugger
 
-export Logger, close!, record, load
+export Logger, close!, record, load, set_info!
 
 
 ############ Logger ############
@@ -59,10 +60,10 @@ function record(logger::Logger, info::Dict)
     end
 end
 
-function flush!(logger::Logger; info=nothing)
+function flush!(logger::Logger; info=Dict())
     h5open(logger.path, "r+") do h5file
         _rec_save!(h5file, "/", logger.buffer)
-        # _info_save!(h5file, info)
+        _info_save!(h5file, info)
     end
     clear!(logger)
 end
@@ -70,21 +71,22 @@ end
 "Close `logger`.
 You must close manually defined logger after simulation terminated."
 function close!(logger::Logger)
-    flush!(logger, info=logger.info)
+    flush!(logger; info=logger.info)
 end
 
-function set_info!(logger::Logger, args...; kwargs...)
-    _rec_update!(logger.info, Dict(zip(args, kwargs)))
-    h5open(logger.path, "r+") do h5file
-        # _info_save(h5file, logger.info)
-    end
+function set_info!(logger::Logger, info::Dict)
+    _rec_update!(logger.info, info, is_info=true)
+    # h5open(logger.path, "r+") do h5file
+    #     _info_save!(h5file, logger.info)
+    # end
 end
 
 
 ############ others ############
-function _info_save!(h5file; info=nothing)
-    # TODO: low priority
-    raise_unsupported_error()
+function _info_save!(h5file, info::Dict=Dict())
+    for (key, val) in info
+        attrs(h5file)[key] = val
+    end
 end
 
 "Recursively save the `dic` into the HDF5 file."
@@ -119,8 +121,12 @@ function load(path; with_info=false)
     h5open(path, "r") do h5file
         ans = _rec_load(h5file, "/")
         if with_info
-            # TODO: low priority
-            raise_unsupported_error()
+            info = Dict()
+            attr = attrs(h5file)
+            for name in names(attr)
+                info[name] = read(attr[name])
+            end
+            return ans, info
         else
             return ans
         end

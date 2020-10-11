@@ -15,7 +15,7 @@ end
 
 function init!(fym::TestEnv;
                controller=LinearController(), x0=ones(3), kwargs...)
-    fym.env = BaseEnv(; kwargs...)
+    fym.env = BaseEnv(; name="custom", kwargs...)
     fym.controller = controller
 
     function set_dyn(env, t)
