@@ -44,7 +44,7 @@ using Parameters
 include("FymCore.jl")
 @reexport using .FymCore
 
-export FymEnv
+export FymEnv, sys
 export FymSystem
 
 # FymSystem list
@@ -59,8 +59,8 @@ export F16LinearLateral, GlidingVehicle3DOF
     # typeof(CustomEnv.env) == BaseEnv
 abstract type FymEnv end
 
-function sys(fym::FymEnv, name)
-    return fym.env.systems[String(name)]
+function FymCore.sys(fym::FymEnv, name)
+    return sys(fym.env, name)
 end
 
 
