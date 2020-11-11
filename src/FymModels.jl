@@ -44,7 +44,7 @@ using Parameters
 include("FymCore.jl")
 @reexport using .FymCore
 
-export FymEnv, set_dot
+export FymEnv
 export FymSystem
 
 # FymSystem list
