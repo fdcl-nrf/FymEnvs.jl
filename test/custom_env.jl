@@ -52,7 +52,7 @@ end
 @with_kw mutable struct LinearController
     K = 3*Matrix(I, 3, 3)
 end
-get(ctrl::LinearController, x) = -ctrl.K * x
+Base.get(ctrl::LinearController, x) = -ctrl.K * x
 
 
 end

@@ -24,7 +24,7 @@ export Clock
 
 export update!, close!, reset!, render
 export observe_array, observe_dict, observe_flat
-export systems!, dyn!, step!
+export systems!, dyn!, step!, sys
 export time_over, time
 
 
@@ -300,6 +300,10 @@ end
 
 function state(env::BaseEnv)
     return observe_flat(env)
+end
+
+function sys(env::BaseEnv, name)
+    return env.systems[String(name)]
 end
 
 function _systems(env::BaseEnv)
