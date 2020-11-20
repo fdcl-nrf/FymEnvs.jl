@@ -237,6 +237,7 @@ function init!(env::BaseEnv;
     systems!(env, systems)
 
     env.clock = Clock(dt, ode_step_len, max_t=max_t)
+    env.dt = env.clock.dt
     env.initial_time = initial_time
 
     env.logger = logger
