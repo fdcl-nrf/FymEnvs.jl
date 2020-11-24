@@ -74,7 +74,7 @@ Result:
 
 ```julia
 # time and progressbar
- 99%|████████████████████████████████████████████████████████████████████████████████████▏|  ETA: 0:00:00  3.513103 seconds (11.45 M allocations: 621.034 MiB, 3.28% gc time)
+ 99%|████████████████████████████████████████████████████████████████████████████████████▎|  ETA: 0:00:00  0.706294 seconds (2.98 M allocations: 1.675 GiB, 11.48% gc time)
 # representation, i.e., show (nested env supported)
 name: test_env
 max_t: 100.0

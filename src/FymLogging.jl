@@ -8,7 +8,7 @@ module FymLogging
 
 import FymEnvs: close!, record
 
-using HDF5
+using JLD2
 using Dates
 # using Debugger
 
@@ -19,7 +19,6 @@ export Logger, close!, record, load, set_info!
 mutable struct Logger
     path
     mode
-    max_len
     info
     buffer
     len
@@ -27,8 +26,8 @@ mutable struct Logger
 end
 
 function init!(logger::Logger;
-                    path=nothing, log_dir=nothing, file_name="data.h5",
-                    max_len=10, mode="w")
+                    path=nothing, log_dir=nothing, file_name="data.jld2",
+                    mode="w")
     if path == nothing
         if log_dir == nothing
             log_dir = joinpath("log", Dates.format(now(), "Ymmd-HMS"))
@@ -37,10 +36,11 @@ function init!(logger::Logger;
         path = joinpath(log_dir, file_name)
     end
     logger.path = path
-    h5open(logger.path, mode) do dummy  # create .h5
+    jldopen(logger.path, mode) do jldfile  # create .jld2
+        JLD2.Group(jldfile, "data")  # make group
+        JLD2.Group(jldfile, "info")  # make group
     end
     logger.mode = mode
-    logger.max_len = max_len
     logger.info = Dict()
     clear!(logger)
     return logger
@@ -55,15 +55,12 @@ end
 function record(logger::Logger, info::Dict)
     _rec_update!(logger.buffer, info)
     logger.len += 1
-    if logger.len >= logger.max_len
-        flush!(logger)
-    end
 end
 
 function flush!(logger::Logger; info=Dict())
-    h5open(logger.path, "r+") do h5file
-        _rec_save!(h5file, "/", logger.buffer)
-        _info_save!(h5file, info)
+    jldopen(logger.path, "r+") do jldfile
+        _rec_save!(jldfile, "/data/", logger.buffer)
+        _info_save!(jldfile, info)
     end
     clear!(logger)
 end
@@ -76,65 +73,56 @@ end
 
 function set_info!(logger::Logger, info::Dict)
     _rec_update!(logger.info, info, is_info=true)
-    # h5open(logger.path, "r+") do h5file
-    #     _info_save!(h5file, logger.info)
-    # end
 end
 
 
 ############ others ############
-function _info_save!(h5file, info::Dict=Dict())
+function _info_save!(jldfile, info::Dict=Dict())
     for (key, val) in info
-        attrs(h5file)[key] = val
+        jldfile["info"][key] = val
     end
 end
 
-"Recursively save the `dic` into the HDF5 file."
-function _rec_save!(h5file, path, dic)
+"Recursively save the `dic` into the JLD2 file."
+function _rec_save!(jldfile, path, dic)
     for (key, val) in dic
         if typeof(val) <: Array
-            if exists(h5file, path*key)
-                dset = h5file[path*key]
-                dims = size(dset)
-                set_dims!(dset, (dims[1]+size(val)[1], dims[2:end]...))
-                indices_exceptone = [Colon()
-                                     for _ in 2:length(size(val))]
-                dset[end-size(val)[1]+1:end, indices_exceptone...] = val
-            else
-                dset = d_create(h5file, path * key, Float64,
-                             (size(val), (-1, size(val)[2:end]...)),
-                             "chunk", size(val)
-                            )
-                indices_all = [Colon() for _ in 1:length(size(val))]
-                dset[indices_all...] = val
-            end
+            jldfile[path * key] = val
         elseif typeof(val) <: Dict
-            _rec_save!(h5file, path * key * "/", val)
+            _rec_save!(jldfile, path * key * "/", val)
         else
             error("Cannot save $(typeof(val)) type")
         end
     end
 end
 
-"Load HDF5 data saved by `Logger`."
+"Load JLD2 data saved by `Logger`."
 function load(path; with_info=false)
-    h5open(path, "r") do h5file
-        ans = _rec_load(h5file, "/")
+    data = Dict()
+    info = Dict()
+    jldopen(path, "r") do jldfile
+        data = _rec_load(jldfile, "data")
         if with_info
-            info = Dict()
-            attr = attrs(h5file)
-            for name in names(attr)
-                info[name] = read(attr[name])
-            end
-            return ans, info
-        else
-            return ans
+            info = _rec_load(jldfile, "info")
         end
+    end
+    if with_info
+        return data, info
+    else
+        return data
     end
 end
 
-function _rec_load(h5file, path)
-    ans = read(h5file[path])
+function _rec_load(jldfile, path)
+    ans = Dict()
+    for key in keys(jldfile[path])
+        val = jldfile[path * "/" * key]
+        if typeof(val) <: JLD2.Group
+            ans[key] = _rec_load(jldfile, path * "/" * key)
+        else
+            ans[key] = val
+        end
+    end
     return ans
 end
 
@@ -142,31 +130,23 @@ end
 function _rec_update!(base_dict, input_dict; is_info=false)
     for (key, val) in input_dict
         if typeof(val) <: Dict
-            _rec_update!(get!(base_dict, key, Dict()), val,
-                         is_info=is_info)
+            _rec_update!(get!(base_dict, key, Dict()), val; is_info=is_info)
         else
             if is_info
                 get!(base_dict, key, val)
             else
                 if !(typeof(val) <: String)
-                    get!(base_dict, key, [])
-                    if length(size(val)) == 0
-                        val = [val]
+                    get!(base_dict, key, Float64[])
+                    if length(size(val)) > 0
+                        val = reshape(val, 1, size(val)...)
                     end
-                    base_dict[key] = cat(base_dict[key],
-                                         reshape(val, 1, size(val)...),
-                                         dims=1)
-                    # append!(get!(base_dict, key, []), val)
+                    base_dict[key] = cat(base_dict[key], val, dims=1)
                 else
                     error("Unsupported data type")
                 end
             end
         end
     end
-end
-
-function raise_unsupported_error()
-    error("Unsupported function yet")
 end
 
 

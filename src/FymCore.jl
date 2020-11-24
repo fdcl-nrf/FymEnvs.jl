@@ -16,8 +16,6 @@ include("FymLogging.jl")
 using ProgressMeter
 # using Debugger
 
-using StaticArrays
-
 export BaseEnv
 export BaseSystem
 export Clock
@@ -264,8 +262,7 @@ function ode_wrapper(env::BaseEnv)
         end
         env.dyn(env, t; kwargs...)
         res = vcat([dot(system)[:] for system in _systems(env)]...)
-        return SVector{env.state_size[1]}(res)
-        # return res
+        return res
     end
     return wrapper
 end

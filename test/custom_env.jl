@@ -31,8 +31,16 @@ function init!(fym::TestEnv;
         sys = env.systems["test_sys"]
         x = sys.state
         u = get(fym.controller, x)
-        info = Dict("time" => t, "state" => x, "input" => u)
-
+        info = Dict(
+                    "time" => t,
+                    "state" => x,
+                    "input" => u,
+                    "group" => Dict(
+                                    "time" => t,
+                                    "state" => x,
+                                    "input" => u,
+                                   )
+                   )
         update!(env)
         next_obs = sys.state
         reward = zeros(1)
