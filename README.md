@@ -102,6 +102,7 @@ The following features are supported in **FymEnvs.jl**:
     - Can perform backward integration with keyword argument `dt (< 0.0).`
 - Log data
     - Can log simulation data and configuration using `Logger`.
+    - It is compatible with [JLD2.jl](https://github.com/JuliaIO/JLD2.jl).
 
 ### Not supported features
 There are some features of `fym`, not realised yet. Here's the list:
