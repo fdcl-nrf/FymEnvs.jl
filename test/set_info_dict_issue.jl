@@ -2,38 +2,33 @@ using FymEnvs
 using LinearAlgebra
 
 if !isdefined(Main, :TestEnvs)
-    # using Revise; includet("custom_env.jl")  # to avoid conflict
     include("custom_env.jl")  # to avoid conflict
     using .TestEnvs
 end
 
 
-function print_msg(test_name)
-    println(">"^6*" "*test_name*" "*"<"^6)
-end
-
-
 function test_custom_fym()
-    fym = TestEnv()
+    fym = TestEnv(; max_t=0.1)
 
     env = fym.env
     log_dir = "data/test"
     file_name = "custom.jld2"
-    # file_name = "custom.h5"
     reset!(env)
     _sample(fym, nothing, log_dir, file_name)
     data, info = load(joinpath(log_dir, file_name),
                       with_info=true)
-    @bp
+    print(info)
+
+    reset!(env)
     _sample2(fym, nothing, log_dir, file_name)
     data, info = load(joinpath(log_dir, file_name),
                       with_info=true)
-    @bp
+    print(info)
 end
 
 function _sample(fym::FymEnv, agent, log_dir, file_name)
     env = fym.env
-    logger = Logger(log_dir=log_dir, file_name=file_name, max_len=10)
+    logger = Logger(log_dir=log_dir, file_name=file_name)
     obs = observe_flat(env)
     i = 0
     @time while true
@@ -61,7 +56,7 @@ end
 
 function _sample2(fym::FymEnv, agent, log_dir, file_name)
     env = fym.env
-    logger = Logger(log_dir=log_dir, file_name=file_name, max_len=1000)
+    logger = Logger(log_dir=log_dir, file_name=file_name)
     obs = observe_flat(env)
     i = 0
     @time while true
@@ -87,5 +82,4 @@ function _sample2(fym::FymEnv, agent, log_dir, file_name)
     close!(logger)
 end
 
-# @enter test_custom_fym()
 test_custom_fym()
