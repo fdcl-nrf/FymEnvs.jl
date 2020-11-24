@@ -18,19 +18,22 @@ function test_custom_fym()
 
     env = fym.env
     log_dir = "data/test"
-    file_name = "custom.h5"
+    file_name = "custom.jld2"
+    # file_name = "custom.h5"
     reset!(env)
     _sample(fym, nothing, log_dir, file_name)
     data, info = load(joinpath(log_dir, file_name),
                       with_info=true)
+    @bp
     _sample2(fym, nothing, log_dir, file_name)
     data, info = load(joinpath(log_dir, file_name),
                       with_info=true)
+    @bp
 end
 
 function _sample(fym::FymEnv, agent, log_dir, file_name)
     env = fym.env
-    logger = Logger(log_dir=log_dir, file_name=file_name, max_len=1000)
+    logger = Logger(log_dir=log_dir, file_name=file_name, max_len=10)
     obs = observe_flat(env)
     i = 0
     @time while true
@@ -84,4 +87,5 @@ function _sample2(fym::FymEnv, agent, log_dir, file_name)
     close!(logger)
 end
 
+# @enter test_custom_fym()
 test_custom_fym()

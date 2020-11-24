@@ -8,9 +8,10 @@ module FymLogging
 
 import FymEnvs: close!, record
 
-using HDF5
+# using HDF5
+using JLD2
 using Dates
-# using Debugger
+using Debugger
 
 export Logger, close!, record, load, set_info!
 
@@ -27,7 +28,8 @@ mutable struct Logger
 end
 
 function init!(logger::Logger;
-                    path=nothing, log_dir=nothing, file_name="data.h5",
+                    # path=nothing, log_dir=nothing, file_name="data.h5",
+                    path=nothing, log_dir=nothing, file_name="data.jld2",
                     max_len=10, mode="w")
     if path == nothing
         if log_dir == nothing
@@ -37,7 +39,10 @@ function init!(logger::Logger;
         path = joinpath(log_dir, file_name)
     end
     logger.path = path
-    h5open(logger.path, mode) do dummy  # create .h5
+    # h5open(logger.path, mode) do dummy  # create .h5
+    jldopen(logger.path, mode) do jldfile  # create .jld2
+        JLD2.Group(jldfile, "data")  # make group
+        JLD2.Group(jldfile, "info")  # make group
     end
     logger.mode = mode
     logger.max_len = max_len
@@ -61,8 +66,10 @@ function record(logger::Logger, info::Dict)
 end
 
 function flush!(logger::Logger; info=Dict())
-    h5open(logger.path, "r+") do h5file
-        _rec_save!(h5file, "/", logger.buffer)
+    # h5open(logger.path, "r+") do h5file
+    jldopen(logger.path, "r+") do h5file
+        _rec_save!(h5file, "/data/", logger.buffer)
+        # @enter _rec_save!(h5file, "/data/", logger.buffer)
         _info_save!(h5file, info)
     end
     clear!(logger)
@@ -76,16 +83,14 @@ end
 
 function set_info!(logger::Logger, info::Dict)
     _rec_update!(logger.info, info, is_info=true)
-    # h5open(logger.path, "r+") do h5file
-    #     _info_save!(h5file, logger.info)
-    # end
 end
 
 
 ############ others ############
 function _info_save!(h5file, info::Dict=Dict())
     for (key, val) in info
-        attrs(h5file)[key] = val
+        h5file["info"][key] = val
+        # attrs(h5file)[key] = val
     end
 end
 
@@ -93,20 +98,28 @@ end
 function _rec_save!(h5file, path, dic)
     for (key, val) in dic
         if typeof(val) <: Array
-            if exists(h5file, path*key)
-                dset = h5file[path*key]
-                dims = size(dset)
-                set_dims!(dset, (dims[1]+size(val)[1], dims[2:end]...))
-                indices_exceptone = [Colon()
-                                     for _ in 2:length(size(val))]
-                dset[end-size(val)[1]+1:end, indices_exceptone...] = val
+            # if exists(h5file, path*key)
+            val_tmp = h5file[path*key]
+            val_new = cat(val, val_tmp, dims=1)
+            if haskey(h5file, path*key)
+                @bp
+                h5file[path*key] = cat(h5file[path*key], val, dims=1)
+                # dset = h5file[path*key]
+                # dims = size(dset)
+                # set_dims!(dset, (dims[1]+size(val)[1], dims[2:end]...))
+                # indices_exceptone = [Colon()
+                #                      for _ in 2:length(size(val))]
+                # dset[end-size(val)[1]+1:end, indices_exceptone...] = val
             else
-                dset = d_create(h5file, path * key, Float64,
-                             (size(val), (-1, size(val)[2:end]...)),
-                             "chunk", size(val)
-                            )
+                # dset = JLD2.Group(h5file, path * key)
+                # dset = d_create(h5file, path * key, Float64,
+                #              (size(val), (-1, size(val)[2:end]...)),
+                #              "chunk", size(val)
+                #             )
+                # indices_all = [Colon() for _ in 1:length(size(val))]
+                # dset[indices_all...] = val
                 indices_all = [Colon() for _ in 1:length(size(val))]
-                dset[indices_all...] = val
+                h5file[path * key] = val
             end
         elseif typeof(val) <: Dict
             _rec_save!(h5file, path * key * "/", val)
@@ -118,24 +131,44 @@ end
 
 "Load HDF5 data saved by `Logger`."
 function load(path; with_info=false)
-    h5open(path, "r") do h5file
-        ans = _rec_load(h5file, "/")
-        if with_info
-            info = Dict()
-            attr = attrs(h5file)
-            for name in names(attr)
-                info[name] = read(attr[name])
-            end
-            return ans, info
-        else
-            return ans
+    # h5open(path, "r") do h5file
+    data = Dict()
+    info = Dict()
+    jldopen(path, "r") do file
+        for key in keys(file["data"])
+            data[key] = file["data"][key]
+        end
+        for key in keys(file["info"])
+            info[key] = file["info"][key]
         end
     end
+
+    if with_info
+        return data, info
+    else
+        return data
+    end
+    # jldopen(path, "r") do h5file
+    #     data = _rec_load(h5file, "data")
+    #     # data = _rec_load(h5file, "/")
+    #     if with_info
+    #         # info = Dict()
+    #         # attr = attrs(h5file)
+    #         # for name in names(attr)
+    #         #     info[name] = read(attr[name])
+    #         # end
+    #         info = h5file["info"]
+    #         return data, info
+    #     else
+    #         return data
+    #     end
+    # end
 end
 
 function _rec_load(h5file, path)
-    ans = read(h5file[path])
-    return ans
+    @bp
+    data = read(h5file, path)
+    return data
 end
 
 "Recursively update `base_dict` with `input_dict`."
