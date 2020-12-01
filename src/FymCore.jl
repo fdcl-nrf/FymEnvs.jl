@@ -75,17 +75,15 @@ end
 "Check if the time is larger than max_t."
 function time_over(clock::Clock; t=nothing)
     if t == nothing
-        return sign(clock.dt) * (time(clock) - clock.max_t) >= 0.0
-    else
-        return sign(clock.dt) * (t - clock.max_t) >= 0.0
+        t = time(clock)
     end
+    return sign(clock.dt) * (t - clock.max_t) > 0.5 * abs(clock.dt)
 end
 
 function thist(clock::Clock)
     thist = clock.thist .+ time(clock)
     if time_over(clock, t=thist[end])
-        index = findfirst(sign(clock.dt)*(thist .- clock.max_t) .> 0.0)
-        # index = findfirst(thist .> clock.max_t)
+        index = findfirst(sign(clock.dt)*(thist .- clock.max_t) .> 0.5 * abs(clock.dt))
         if index == nothing
             return thist
         else

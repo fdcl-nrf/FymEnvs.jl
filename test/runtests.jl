@@ -18,7 +18,7 @@ end
 
 function test_custom_fym()
     print_msg("custom FymEnv")
-    fym = TestEnv(; max_t=0.1)
+    fym = TestEnv(; dt=0.001, max_t=0.1)
 
     env = fym.env
     log_dir = "data/test"
