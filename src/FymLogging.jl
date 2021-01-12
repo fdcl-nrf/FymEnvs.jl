@@ -136,7 +136,7 @@ function _rec_update!(base_dict, input_dict; is_info=false)
                 get!(base_dict, key, val)
             else
                 if !(typeof(val) <: String)
-                    get!(base_dict, key, Float64[])
+                    get!(base_dict, key, typeof(val[1])[])
                     if length(size(val)) > 0
                         val = reshape(val, 1, size(val)...)
                     end

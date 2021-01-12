@@ -45,6 +45,7 @@ function init!(fym::TestEnv;
         next_obs = sys.state
         reward = zeros(1)
         done = time_over(env.clock)
+        info["done"] = done
         return next_obs, reward, done, info
     end
 

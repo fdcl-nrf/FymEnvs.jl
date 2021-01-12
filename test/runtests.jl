@@ -18,7 +18,7 @@ end
 
 function test_custom_fym()
     print_msg("custom FymEnv")
-    fym = TestEnv(; dt=0.001, max_t=0.1)
+    fym = TestEnv(; dt=0.01, max_t=0.1)
 
     env = fym.env
     log_dir = "data/test"
@@ -27,6 +27,8 @@ function test_custom_fym()
     _sample(fym, nothing, log_dir, file_name)
     data, info = load(joinpath(log_dir, file_name),
                       with_info=true)
+    @show typeof(data["done"])
+    plot(data["time"], data["state"])
     for name in ["state", "input"]
         p = plot(data["time"], data[name])
         savefig(p, joinpath(log_dir, "custom_"*name*".pdf"))
