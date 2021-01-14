@@ -18,16 +18,19 @@ end
 
 function test_custom_fym()
     print_msg("custom FymEnv")
-    fym = TestEnv(; dt=0.01, max_t=0.1)
+    fym = TestEnv(; dt=0.001, max_t=1.000)
 
     env = fym.env
     log_dir = "data/test"
-    file_name = "custom.h5"
+    file_name = "custom.jld2"
     reset!(env)
     _sample(fym, nothing, log_dir, file_name)
     data, info = load(joinpath(log_dir, file_name),
                       with_info=true)
-    @show typeof(data["done"])
+    @show length(data["time"])
+    @show length(data["group"]["time"])
+    @show size(data["group"]["state"])
+    @show info
     plot(data["time"], data["state"])
     for name in ["state", "input"]
         p = plot(data["time"], data[name])
@@ -63,7 +66,7 @@ function test_reverse_time()
     x0 = collect(1:3)
     systems = Dict("sys" => BaseSystem(initial_state=x0, name="3d_sys"))
     log_dir = "data/test"
-    file_name = "fym.h5"
+    file_name = "fym.jld2"
     logger = Logger(log_dir=log_dir, file_name=file_name)
     env = BaseEnv(max_t=0.00, dt=-0.01, initial_time=1.0, logger=logger, name="test_env",)
     systems!(env, systems)  # set systems; required

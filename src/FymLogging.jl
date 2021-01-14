@@ -22,12 +22,14 @@ mutable struct Logger
     info
     buffer
     len
+    max_len
     Logger(args...; kwargs...) = init!(new(), args...; kwargs...)
 end
 
 function init!(logger::Logger;
-                    path=nothing, log_dir=nothing, file_name="data.jld2",
-                    mode="w")
+               path=nothing, log_dir=nothing, file_name="data.jld2",
+               max_len::Int=1000,
+               mode="w")
     if path == nothing
         if log_dir == nothing
             log_dir = joinpath("log", Dates.format(now(), "Ymmd-HMS"))
@@ -36,14 +38,19 @@ function init!(logger::Logger;
         path = joinpath(log_dir, file_name)
     end
     logger.path = path
-    jldopen(logger.path, mode) do jldfile  # create .jld2
-        JLD2.Group(jldfile, "data")  # make group
-        JLD2.Group(jldfile, "info")  # make group
+    logger.max_len = max_len
+    jldopen(path, mode) do jldfile
+        initialise(jldfile, ["data", "info"])
     end
     logger.mode = mode
     logger.info = Dict()
     clear!(logger)
     return logger
+end
+
+function initialise(jldfile, group_array)
+    JLD2.Group(jldfile, "data")
+    JLD2.Group(jldfile, "info")
 end
 
 function clear!(logger::Logger)
@@ -55,11 +62,35 @@ end
 function record(logger::Logger, info::Dict)
     _rec_update!(logger.buffer, info)
     logger.len += 1
+    if logger.len % logger.max_len == 0
+        flush!(logger)
+    end
 end
 
-function flush!(logger::Logger; info=Dict())
-    jldopen(logger.path, "r+") do jldfile
-        _rec_save!(jldfile, "/data/", logger.buffer)
+function append_data(data, buffer)
+    for key in keys(buffer)
+        if key in keys(data)
+            if typeof(data[key]) <: Dict
+                _ = append_data(data[key], buffer[key])
+            else
+                data[key] = cat(data[key], buffer[key], dims=1)
+            end
+        else
+            data[key] = buffer[key]
+        end
+    end
+    return data
+end
+
+function flush!(logger::Logger)
+    data = load(logger.path; with_info=false)
+    # data appending
+    append_data(data, logger.buffer)
+    # info update
+    info = logger.info  # always overwrited
+    jldopen(logger.path, "w") do jldfile
+        initialise(jldfile, ["data", "info"])
+        _rec_save!(jldfile, "/data/", data)
         _info_save!(jldfile, info)
     end
     clear!(logger)
@@ -68,7 +99,7 @@ end
 "Close `logger`.
 You must close manually defined logger after simulation terminated."
 function close!(logger::Logger)
-    flush!(logger; info=logger.info)
+    flush!(logger)
 end
 
 function set_info!(logger::Logger, info::Dict)
