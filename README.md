@@ -1,3 +1,7 @@
+# NOTICE
+This repository will be deprecated.
+For the next version, see [LazyFym](https://github.com/JinraeKim/LazyFym.jl).
+
 # FymEnvs
 **FymEnvs.jl** is a Julia version of [the original `fym`](https://github.com/fdcl-nrf/fym),
 developed by FDCL in SNU.
